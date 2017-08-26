@@ -1,0 +1,10 @@
+runtime: go
+api_version: go1.8
+
+handlers:
+- url: /.*
+  script: _go_app
+
+env_variables:
+  # parseTime=true を付けておくと、datetime 型のカラムを parse してくれる
+  MYSQL_CONNECTION_STRING: root:root@cloudsql(third-being-175805:asia-northeast1:lessonmanager)/lessonmanager?parseTime=true

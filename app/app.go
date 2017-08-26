@@ -1,10 +1,11 @@
-package router
+package app
 
 import (
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
+
 	"github.com/urfave/negroni"
 
 	"google.golang.org/appengine"
@@ -29,5 +30,6 @@ func myMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc
 }
 
 func handler(rw http.ResponseWriter, r *http.Request) {
+	if (r.Header["Content-Type"][0] != "application/json") 
 	fmt.Fprint(rw, "It's lesson manager!!")
 }
