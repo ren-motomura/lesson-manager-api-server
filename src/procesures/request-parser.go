@@ -12,9 +12,14 @@ type ParsedRequest struct {
 	FuncName string
 	Data     []byte
 	User     *models.User
+	Origin   *http.Request
 }
 
 const FuncNameHeaderKey = "X-Lessonmanager-Funcname"
+
+func (req *ParsedRequest) IsAuthorized() bool {
+	return req.User != nil
+}
 
 func ParseRequest(r *http.Request) (*ParsedRequest, error) {
 	if len(r.Header[FuncNameHeaderKey]) == 0 {
@@ -32,6 +37,7 @@ func ParseRequest(r *http.Request) (*ParsedRequest, error) {
 		FuncName: funcName,
 		Data:     data,
 		User:     user,
+		Origin:   r,
 	}
 	return &pr, nil
 }

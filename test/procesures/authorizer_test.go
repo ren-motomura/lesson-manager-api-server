@@ -5,6 +5,7 @@ import (
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
+	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
 func TestAuthorize(t *testing.T) {
@@ -18,7 +19,7 @@ func TestAuthorize(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := buildRequest("testFunc", []byte{}, session.ID)
+	req := testutils.BuildRequest("testFunc", []byte{}, session.ID)
 
 	authorizedUser, err := procesures.Authorize(req)
 	if err != nil {

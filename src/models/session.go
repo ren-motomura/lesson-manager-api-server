@@ -2,11 +2,11 @@ package models
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/go-gorp/gorp"
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 )
 
 type Session struct {
@@ -36,7 +36,7 @@ func FindSession(sessionID string) (*Session, error) {
 		return nil, err
 	}
 	if len(rows) != 1 {
-		return nil, errors.New("session not found")
+		return nil, errs.ErrNotFound
 	}
 	session := rows[0].(*Session)
 	return session, nil

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/go-gorp/gorp"
@@ -13,10 +14,14 @@ import (
 var isDbInitialized = false
 var recconectAt time.Time
 var dbMap *gorp.DbMap
+var mtx sync.Mutex
 
 const recconectPeriod = 300
 
 func Db() (*gorp.DbMap, error) {
+	mtx.Lock()
+	defer mtx.Unlock()
+
 	if isDbInitialized {
 		if recconectAt.After(time.Now()) { // 再接続の必要がない場合
 			return dbMap, nil

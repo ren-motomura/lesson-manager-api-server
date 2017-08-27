@@ -2,10 +2,10 @@ package models
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 
 	"github.com/go-gorp/gorp"
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 )
 
 type User struct {
@@ -44,7 +44,7 @@ func FindUser(userID int) (*User, error) {
 		return nil, err
 	}
 	if len(rows) != 1 {
-		return nil, errors.New("user not found")
+		return nil, errs.ErrNotFound
 	}
 	user := rows[0].(*User)
 	return user, nil
@@ -61,7 +61,7 @@ func FindUserByEmailAddress(emailAddress string) (*User, error) {
 		return nil, err
 	}
 	if len(rows) != 1 {
-		return nil, errors.New("user not found")
+		return nil, errs.ErrNotFound
 	}
 	user := rows[0].(*User)
 	return user, nil
