@@ -25,8 +25,8 @@ func registerUser(dbMap *gorp.DbMap) {
 	t.ColMap("Password").Rename("password")
 }
 
-func comparePassword(rawPassword string) bool {
-	return rawPassword == generateUserPasswordHash(rawPassword)
+func (u *User) ComparePassword(rawPassword string) bool {
+	return u.Password == generateUserPasswordHash(rawPassword)
 }
 
 func generateUserPasswordHash(rawPassword string) string {

@@ -12,16 +12,17 @@ import (
 )
 
 func TestCreateSession(t *testing.T) {
-	user, err := models.CreateUser("sample太郎", "sample@example.com", "password")
+	rawPassword := "password"
+	user, err := models.CreateUser("sample太郎", "sample@example.com", rawPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	reqParam := &pb.CreateSessionRequest{
 		EmailAddress: user.EmailAddress,
-		Password:     user.Password,
+		Password:     rawPassword,
 	}
-	reqBin, err := proto.Marshal(reqParam)
+	reqBin, _ := proto.Marshal(reqParam)
 	req := testutils.BuildRequest("CreateSession", reqBin, "")
 	pr, err := procesures.ParseRequest(req)
 	if err != nil {
@@ -32,7 +33,7 @@ func TestCreateSession(t *testing.T) {
 	controllers.Route(&frw, pr)
 
 	if frw.status != 200 {
-		t.Fatal()
+		t.Fatalf("status: %d", frw.status)
 	}
 	res := &pb.CreateSessionResponse{}
 	err = proto.Unmarshal(frw.body, res)

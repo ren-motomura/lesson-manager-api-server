@@ -7,6 +7,10 @@ import (
 )
 
 var funcMap = map[string]map[string]interface{}{
+	"CreateUser": {
+		"requireAuthorization": false,
+		"delegate":             createUser{},
+	},
 	"CreateSession": {
 		"requireAuthorization": false,
 		"delegate":             createSession{},
