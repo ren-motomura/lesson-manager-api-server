@@ -17,53 +17,28 @@ func (createSession) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 	param := &pb.CreateSessionRequest{}
 	err := proto.Unmarshal(r.Data, param)
 	if err != nil {
-		res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
-			ErrorType: pb.ErrorType_INVALID_REQUEST_FORMAT,
-			Message:   "",
-		})
-		rw.WriteHeader(400)
-		rw.Write(res)
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
 		return
 	}
 
 	user, err := models.FindUserByEmailAddress(param.EmailAddress)
 	if err != nil {
 		if err == errs.ErrNotFound {
-			res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
-				ErrorType: pb.ErrorType_USER_NOT_FOUND,
-				Message:   "",
-			})
-			rw.WriteHeader(404)
-			rw.Write(res)
+			writeErrorResponse(rw, 404, pb.ErrorType_USER_NOT_FOUND, "")
 			return
 		}
-		res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
-			ErrorType: pb.ErrorType_INTERNAL_SERVER_ERROR,
-			Message:   "",
-		})
-		rw.WriteHeader(500)
-		rw.Write(res)
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 
 	if !user.ComparePassword(param.Password) {
-		res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
-			ErrorType: pb.ErrorType_INVALID_PASSWORD,
-			Message:   "",
-		})
-		rw.WriteHeader(400)
-		rw.Write(res)
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_PASSWORD, "")
 		return
 	}
 
 	session, err := models.CreateSession(user)
 	if err != nil { // まれに生成した sessionId がすでに存在していてエラーになる可能性があるが...その場合は 500 で返す
-		res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
-			ErrorType: pb.ErrorType_INTERNAL_SERVER_ERROR,
-			Message:   "",
-		})
-		rw.WriteHeader(500)
-		rw.Write(res)
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 

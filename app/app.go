@@ -3,9 +3,12 @@ package app
 import (
 	"net/http"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 
+	"github.com/ren-motomura/lesson-manager-api-server/src/controllers"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
+	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 	"github.com/urfave/negroni"
 
 	"google.golang.org/appengine"
@@ -32,7 +35,14 @@ func myMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc
 func mainHandler(rw http.ResponseWriter, r *http.Request) {
 	req, err := procesures.ParseRequest(r)
 	if err != nil { // ここでのエラーはリクエストの形式がおかしい場合のみ
+		res, _ := proto.Marshal(&pb.ErrorResponse{ // エラーは発生しないはず
+			ErrorType: pb.ErrorType_INVALID_REQUEST_FORMAT,
+			Message:   "invalid format",
+		})
+
 		rw.WriteHeader(400)
+		rw.Write(res)
+		return
 	}
-	
+	controllers.Route(rw, req)
 }

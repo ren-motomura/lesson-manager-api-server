@@ -3,9 +3,6 @@ package controllers
 import (
 	"net/http"
 
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/log"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
@@ -26,48 +23,38 @@ func (createUser) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
 
 	_, err = models.FindUserByEmailAddress(param.EmailAddress)
 	if err == nil { // ユーザーが存在したことになる
-		rw.WriteHeader(409)
+		writeErrorResponse(rw, 409, pb.ErrorType_USER_ALREADY_EXIST, "")
 		return
 	}
 	if err != errs.ErrNotFound { // 謎のエラー
-		ctx := appengine.NewContext(r.Origin)
-		log.Errorf(ctx, "find user error: %v", err)
-		rw.WriteHeader(500)
+		writeErrorResponseWithLog(err, r, rw, 409, pb.ErrorType_USER_ALREADY_EXIST, "fail to find user")
 		return
 	}
 
 	// ユーザーとセッションを同一トランザクションで作成する
 	db, err := models.Db()
 	if err != nil {
-		ctx := appengine.NewContext(r.Origin)
-		log.Errorf(ctx, "db connection error: %v", err)
-		rw.WriteHeader(500)
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to get db")
 		return
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
-		ctx := appengine.NewContext(r.Origin)
-		log.Errorf(ctx, "start transaction error: %v", err)
-		rw.WriteHeader(500)
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to start transaction")
 		return
 	}
 
 	user, err := models.CreateUserInTx(param.Name, param.EmailAddress, param.Password, tx)
 	if err != nil {
 		tx.Rollback()
-		ctx := appengine.NewContext(r.Origin)
-		log.Errorf(ctx, "create user error: %v", err)
-		rw.WriteHeader(500)
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to create user")
 		return
 	}
 
 	session, err := models.CreateSessionInTx(user, tx)
 	if err != nil {
 		tx.Rollback()
-		ctx := appengine.NewContext(r.Origin)
-		log.Errorf(ctx, "create session error: %v", err)
-		rw.WriteHeader(500)
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to create session")
 		return
 	}
 
