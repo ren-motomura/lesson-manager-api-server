@@ -7,12 +7,19 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 )
 
+type gorpLogger struct{}
+
+func (gl *gorpLogger) Printf(format string, v ...interface{}) {
+	log.Printf(format, v...)
+}
+
 func PreProcess() {
 	setEnv()
 	db, err := models.Db()
 	if err != nil {
 		log.Fatal(err)
 	}
+	db.TraceOn("[gorp SQL log]", &gorpLogger{})
 	err = db.TruncateTables()
 	if err != nil {
 		log.Fatal(err)

@@ -16,7 +16,7 @@ var recconectAt time.Time
 var dbMap *gorp.DbMap
 var mtx sync.Mutex
 
-const recconectPeriod = 300
+const recconectPeriod = 300 * time.Second
 
 func Db() (*gorp.DbMap, error) {
 	mtx.Lock()
@@ -50,6 +50,7 @@ func Db() (*gorp.DbMap, error) {
 	registerStudio(dbMap)
 	registerStaff(dbMap)
 	registerCustomer(dbMap)
+	registerLesson(dbMap)
 
 	// register tables here ↑
 
