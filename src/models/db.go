@@ -49,6 +49,7 @@ func Db() (*gorp.DbMap, error) {
 	registerCompany(dbMap)
 	registerStudio(dbMap)
 	registerStaff(dbMap)
+	registerCustomer(dbMap)
 
 	// register tables here ↑
 
