@@ -9,24 +9,24 @@ import (
 )
 
 func TestAuthorize(t *testing.T) {
-	user, err := models.CreateUser("test user", "test@example.com", "password")
+	company, err := models.CreateCompany("test", "test@example.com", "password")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	session, err := models.CreateSession(user)
+	session, err := models.CreateSession(company)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	req := testutils.BuildRequest("testFunc", []byte{}, session.ID)
 
-	authorizedUser, err := procesures.Authorize(req)
+	authorizedCompany, err := procesures.Authorize(req)
 	if err != nil {
 		t.Fatal("authorize failed")
 	}
 
-	if authorizedUser.ID != user.ID {
+	if authorizedCompany.ID != company.ID {
 		t.Fatal("something wrong")
 	}
 }

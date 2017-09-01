@@ -11,14 +11,14 @@ import (
 type ParsedRequest struct {
 	FuncName string
 	Data     []byte
-	User     *models.User
+	Company  *models.Company
 	Origin   *http.Request
 }
 
 const FuncNameHeaderKey = "X-Lessonmanager-Funcname"
 
 func (req *ParsedRequest) IsAuthorized() bool {
-	return req.User != nil
+	return req.Company != nil
 }
 
 func ParseRequest(r *http.Request) (*ParsedRequest, error) {
@@ -31,12 +31,12 @@ func ParseRequest(r *http.Request) (*ParsedRequest, error) {
 		return nil, errors.New("fail to read body")
 	}
 
-	user, _ := Authorize(r) // エラーは無視して大丈夫
+	company, _ := Authorize(r) // エラーは無視して大丈夫
 
 	pr := ParsedRequest{
 		FuncName: funcName,
 		Data:     data,
-		User:     user,
+		Company:  company,
 		Origin:   r,
 	}
 	return &pr, nil

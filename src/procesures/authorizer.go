@@ -8,7 +8,7 @@ import (
 
 const SessionCookieName = "Lessonmanager-Session"
 
-func Authorize(r *http.Request) (*models.User, error) {
+func Authorize(r *http.Request) (*models.Company, error) {
 	c, err := r.Cookie(SessionCookieName)
 	if err != nil {
 		return nil, err
@@ -20,10 +20,10 @@ func Authorize(r *http.Request) (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := models.FindUser(session.UserID)
+	company, err := models.FindCompany(session.CompanyID)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return company, nil
 }

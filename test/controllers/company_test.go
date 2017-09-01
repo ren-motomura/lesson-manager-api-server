@@ -10,14 +10,14 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
-func TestCreateUser(t *testing.T) {
-	reqParam := &pb.CreateUserRequest{
-		Name:         "サンプル太郎",
+func TestCreateCompany(t *testing.T) {
+	reqParam := &pb.CreateCompanyRequest{
+		Name:         "サンプル",
 		EmailAddress: "sample@expamle.com",
 		Password:     "password",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
-	req := testutils.BuildRequest("CreateUser", reqBin, "")
+	req := testutils.BuildRequest("CreateCompany", reqBin, "")
 	pr, err := procesures.ParseRequest(req)
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +29,7 @@ func TestCreateUser(t *testing.T) {
 	if frw.status != 200 {
 		t.Fatalf("status: %d", frw.status)
 	}
-	res := &pb.CreateUserResponse{}
+	res := &pb.CreateCompanyResponse{}
 	err = proto.Unmarshal(frw.body, res)
 	if err != nil {
 		t.Fatal(err)

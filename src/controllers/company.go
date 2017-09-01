@@ -10,28 +10,28 @@ import (
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 )
 
-type createUser struct {
+type createCompany struct {
 }
 
-func (createUser) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
-	param := &pb.CreateUserRequest{}
+func (createCompany) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.CreateCompanyRequest{}
 	err := proto.Unmarshal(r.Data, param)
 	if err != nil {
 		rw.WriteHeader(400)
 		return
 	}
 
-	_, err = models.FindUserByEmailAddress(param.EmailAddress)
-	if err == nil { // ユーザーが存在したことになる
-		writeErrorResponse(rw, 409, pb.ErrorType_USER_ALREADY_EXIST, "")
+	_, err = models.FindCompanyByEmailAddress(param.EmailAddress)
+	if err == nil { // Company が存在したことになる
+		writeErrorResponse(rw, 409, pb.ErrorType_ALREADY_EXIST, "")
 		return
 	}
 	if err != errs.ErrNotFound { // 謎のエラー
-		writeErrorResponseWithLog(err, r, rw, 409, pb.ErrorType_USER_ALREADY_EXIST, "fail to find user")
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to find company")
 		return
 	}
 
-	// ユーザーとセッションを同一トランザクションで作成する
+	// Company と Session を同一トランザクションで作成する
 	db, err := models.Db()
 	if err != nil {
 		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to get db")
@@ -44,14 +44,14 @@ func (createUser) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
 		return
 	}
 
-	user, err := models.CreateUserInTx(param.Name, param.EmailAddress, param.Password, tx)
+	company, err := models.CreateCompanyInTx(param.Name, param.EmailAddress, param.Password, tx)
 	if err != nil {
 		tx.Rollback()
-		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to create user")
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to create company")
 		return
 	}
 
-	session, err := models.CreateSessionInTx(user, tx)
+	session, err := models.CreateSessionInTx(company, tx)
 	if err != nil {
 		tx.Rollback()
 		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "fail to create session")
@@ -61,10 +61,11 @@ func (createUser) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
 	tx.Commit()
 
 	setSessionToResponse(rw, session)
-	res, _ := proto.Marshal(&pb.CreateUserResponse{ // エラーは発生しないはず
-		Id:           int64(user.ID),
-		Name:         user.Name,
-		EmailAddress: user.EmailAddress,
+	res, _ := proto.Marshal(&pb.CreateCompanyResponse{ // エラーは発生しないはず
+		Id:           int64(company.ID),
+		Name:         company.Name,
+		EmailAddress: company.EmailAddress,
+		CreatedAt:    company.CreatedAt.Unix(),
 	})
 	rw.WriteHeader(200)
 	rw.Write(res)

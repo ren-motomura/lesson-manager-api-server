@@ -1,6 +1,8 @@
 package models
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"time"
 
 	"github.com/go-gorp/gorp"
@@ -22,6 +24,14 @@ func registerCompany(dbMap *gorp.DbMap) {
 	t.ColMap("EmailAddress").Rename("email_address")
 	t.ColMap("Password").Rename("password")
 	t.ColMap("CreatedAt").Rename("created_at")
+}
+
+func (self *Company) ComparePassword(rawPassword string) bool {
+	return generatePasswordHash(rawPassword) == self.Password
+}
+
+func generatePasswordHash(rawPassword string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(rawPassword+"wogiba;eworugba;w")))
 }
 
 func FindCompany(companyID int) (*Company, error) {
@@ -79,7 +89,7 @@ func CreateCompanyInTx(name string, emailAddress string, rawPassword string, tx 
 	company := &Company{
 		Name:         name,
 		EmailAddress: emailAddress,
-		Password:     generateUserPasswordHash(rawPassword),
+		Password:     generatePasswordHash(rawPassword),
 		CreatedAt:    time.Now(),
 	}
 	err := tx.Insert(company)

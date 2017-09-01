@@ -11,7 +11,7 @@ import (
 
 type Session struct {
 	ID        string
-	UserID    int
+	CompanyID int
 	ExpiresAt time.Time
 }
 
@@ -21,8 +21,8 @@ const sessionPeriod = 300
 func registerSession(dbMap *gorp.DbMap) {
 	t := dbMap.AddTableWithName(Session{}, "sessions").SetKeys(false, "ID")
 	t.ColMap("ID").Rename("id")
-	t.ColMap("UserID").Rename("userId")
-	t.ColMap("ExpiresAt").Rename("expiresAt")
+	t.ColMap("CompanyID").Rename("company_id")
+	t.ColMap("ExpiresAt").Rename("expires_at")
 }
 
 func FindSession(sessionID string) (*Session, error) {
@@ -42,14 +42,14 @@ func FindSession(sessionID string) (*Session, error) {
 	return session, nil
 }
 
-func CreateSession(user *User) (*Session, error) {
+func CreateSession(company *Company) (*Session, error) {
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	tx, _ := db.Begin()
-	session, err := CreateSessionInTx(user, tx)
+	session, err := CreateSessionInTx(company, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -59,10 +59,10 @@ func CreateSession(user *User) (*Session, error) {
 	return session, nil
 }
 
-func CreateSessionInTx(user *User, tx *gorp.Transaction) (*Session, error) {
+func CreateSessionInTx(company *Company, tx *gorp.Transaction) (*Session, error) {
 	now := time.Now()
 
-	seedStr := user.EmailAddress + sessionSeed + now.String()
+	seedStr := company.EmailAddress + sessionSeed + now.String()
 	sessionID := fmt.Sprintf(
 		"%x",
 		sha256.Sum256([]byte(seedStr)),
@@ -70,7 +70,7 @@ func CreateSessionInTx(user *User, tx *gorp.Transaction) (*Session, error) {
 
 	session := &Session{
 		ID:        sessionID,
-		UserID:    user.ID,
+		CompanyID: company.ID,
 		ExpiresAt: now.Add(sessionPeriod),
 	}
 	err := tx.Insert(session)

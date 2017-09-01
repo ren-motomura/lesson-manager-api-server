@@ -21,22 +21,22 @@ func (createSession) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 		return
 	}
 
-	user, err := models.FindUserByEmailAddress(param.EmailAddress)
+	company, err := models.FindCompanyByEmailAddress(param.EmailAddress)
 	if err != nil {
 		if err == errs.ErrNotFound {
-			writeErrorResponse(rw, 404, pb.ErrorType_USER_NOT_FOUND, "")
+			writeErrorResponse(rw, 404, pb.ErrorType_NOT_FOUND, "")
 			return
 		}
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 
-	if !user.ComparePassword(param.Password) {
+	if !company.ComparePassword(param.Password) {
 		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_PASSWORD, "")
 		return
 	}
 
-	session, err := models.CreateSession(user)
+	session, err := models.CreateSession(company)
 	if err != nil { // まれに生成した sessionId がすでに存在していてエラーになる可能性があるが...その場合は 500 で返す
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return

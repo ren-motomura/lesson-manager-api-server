@@ -7,9 +7,9 @@ import (
 )
 
 var funcMap = map[string]map[string]interface{}{
-	"CreateUser": {
+	"CreateCompany": {
 		"requireAuthorization": false,
-		"delegate":             createUser{},
+		"delegate":             createCompany{},
 	},
 	"CreateSession": {
 		"requireAuthorization": false,

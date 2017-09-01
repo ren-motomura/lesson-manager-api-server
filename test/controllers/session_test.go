@@ -13,13 +13,13 @@ import (
 
 func TestCreateSession(t *testing.T) {
 	rawPassword := "password"
-	user, err := models.CreateUser("sample太郎", "sample@example.com", rawPassword)
+	company, err := models.CreateCompany("sample", "sample@example.com", rawPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	reqParam := &pb.CreateSessionRequest{
-		EmailAddress: user.EmailAddress,
+		EmailAddress: company.EmailAddress,
 		Password:     rawPassword,
 	}
 	reqBin, _ := proto.Marshal(reqParam)
