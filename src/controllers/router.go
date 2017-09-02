@@ -39,6 +39,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": true,
 		"delegate":             deleteCustomer{},
 	},
+	"SetCardOnCustomer": {
+		"requireAuthorization": true,
+		"delegate":             setCardOnCustomer{},
+	},
 }
 
 type executer interface {

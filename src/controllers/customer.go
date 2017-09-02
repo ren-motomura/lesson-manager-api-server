@@ -154,3 +154,72 @@ func (deleteCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 	rw.WriteHeader(200)
 	rw.Write(res)
 }
+
+type setCardOnCustomer struct {
+}
+
+func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.SetCardOnCustomerRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil || param.Card == nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	customer, err := models.FindCustomer(int(param.CustomerId), false, nil)
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if customer.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	_, err = models.FindCard(param.Card.Id, false, nil)
+	if err != errs.ErrNotFound {
+		writeErrorResponse(rw, 409, pb.ErrorType_ALREADY_EXIST, "")
+		return
+	}
+
+	db, err := models.Db()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	card, err := models.CreateCardInTx(param.Card.Id, customer, int(param.Card.Credit), tx)
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.CreateCustomerResponse{ // エラーは発生しないはず
+		Customer: &pb.Customer{
+			Id:          int32(customer.ID),
+			Name:        customer.Name,
+			Description: customer.Description,
+			Card: &pb.Card{
+				Id:     card.ID,
+				Credit: int32(card.Credit),
+			},
+		},
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
