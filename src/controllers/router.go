@@ -23,6 +23,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": true,
 		"delegate":             createStaff{},
 	},
+	"DeleteStaff": {
+		"requireAuthorization": true,
+		"delegate":             deleteStaff{},
+	},
 }
 
 type executer interface {

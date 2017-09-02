@@ -18,6 +18,10 @@ var mtx sync.Mutex
 
 const recconectPeriod = 300 * time.Second
 
+type Selector interface {
+	Select(i interface{}, query string, args ...interface{}) ([]interface{}, error)
+}
+
 func Db() (*gorp.DbMap, error) {
 	mtx.Lock()
 	defer mtx.Unlock()

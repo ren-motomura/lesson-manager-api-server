@@ -3,6 +3,8 @@ package models
 import (
 	"time"
 
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
+
 	"github.com/go-gorp/gorp"
 )
 
@@ -29,13 +31,56 @@ func (self *Staff) Delete() error {
 		return err
 	}
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	err = self.DeleteInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
+}
+
+func (self *Staff) DeleteInTx(tx *gorp.Transaction) error {
 	self.IsValid = false
-	_, err = db.Update(self)
+	_, err := tx.Update(self)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func FindStaff(id int, forUpdate bool, tx *gorp.Transaction) (*Staff, error) {
+	forUpStatement := ""
+	if forUpdate {
+		forUpStatement = "for update"
+	}
+
+	var selector Selector
+	if tx != nil {
+		selector = tx
+	} else {
+		db, err := Db()
+		if err != nil {
+			return nil, err
+		}
+		selector = db
+	}
+
+	rows, err := selector.Select(Staff{}, "select * from staffs where id = ? and is_valid = ? "+forUpStatement, id, true)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	staff := rows[0].(*Staff)
+	return staff, nil
 }
 
 func SelectStaffsByCompany(company *Company) ([]*Staff, error) {
