@@ -53,8 +53,6 @@ func TestLesson(t *testing.T) {
 			"sample customer"+strconv.Itoa(i),
 			"description",
 			company,
-			"card"+strconv.Itoa(i),
-			0,
 		)
 		if err != nil {
 			t.Fatal(err)

@@ -3,7 +3,6 @@ package models_test
 import (
 	"crypto/sha256"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
@@ -11,7 +10,7 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
-func TestCustomer(t *testing.T) {
+func TestCard(t *testing.T) {
 	teardown := testutils.Setup(t)
 	defer teardown(t)
 
@@ -23,36 +22,28 @@ func TestCustomer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	customers := make([]*models.Customer, 3)
-	for i := 0; i < len(customers); i++ {
-		customer, err := models.CreateCustomer(
-			"sample customer"+strconv.Itoa(i),
-			"description",
-			company,
-		)
-		if err != nil {
-			t.Fatal(err)
-		}
-		customers[i] = customer
-	}
-
-	selectedCustomers, err := models.SelectCustomersByCompany(company)
+	customer, err := models.CreateCustomer(
+		"sample customer",
+		"description",
+		company,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(customers) != len(selectedCustomers) {
+	card, err := models.CreateCard("sample card", customer, 10000)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	for i, s := range selectedCustomers {
-		if customers[i].Name != s.Name {
-			t.Fatal("invalid name")
-		}
+	_, err = models.FindCard(card.ID, false, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	customers[0].Delete()
-	_, err = models.FindCustomer(customers[0].ID, false, nil)
+	card.Delete()
+
+	_, err = models.FindCard(card.ID, false, nil)
 	if err != errs.ErrNotFound {
 		t.Fatal("fail to delete")
 	}
