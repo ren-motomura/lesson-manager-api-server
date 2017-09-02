@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
 )
 
@@ -26,4 +27,10 @@ func BuildRequest(funcName string, body []byte, sessionID string) (r *http.Reque
 		Value: sessionID,
 	})
 	return r
+}
+
+func CreateCompanyAndSession() (*models.Company, *models.Session) {
+	company, _ := models.CreateCompany("sample company", "sample@example.com", "password")
+	session, _ := models.CreateSession(company)
+	return company, session
 }

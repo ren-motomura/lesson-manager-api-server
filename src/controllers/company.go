@@ -17,7 +17,7 @@ func (createCompany) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 	param := &pb.CreateCompanyRequest{}
 	err := proto.Unmarshal(r.Data, param)
 	if err != nil {
-		rw.WriteHeader(400)
+		writeErrorResponse(rw, 409, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
 		return
 	}
 
