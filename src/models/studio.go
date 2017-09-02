@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-gorp/gorp"
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 )
 
 type Studio struct {
@@ -29,13 +30,56 @@ func (self *Studio) Delete() error {
 		return err
 	}
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	err = self.DeleteInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
+}
+
+func (self *Studio) DeleteInTx(tx *gorp.Transaction) error {
 	self.IsValid = false
-	_, err = db.Update(self)
+	_, err := tx.Update(self)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func FindStudio(id int, forUpdate bool, tx *gorp.Transaction) (*Studio, error) {
+	forUpStatement := ""
+	if forUpdate {
+		forUpStatement = "for update"
+	}
+
+	var selector Selector
+	if tx != nil {
+		selector = tx
+	} else {
+		db, err := Db()
+		if err != nil {
+			return nil, err
+		}
+		selector = db
+	}
+
+	rows, err := selector.Select(Studio{}, "select * from studios where id = ? and is_valid = ? "+forUpStatement, id, true)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	studio := rows[0].(*Studio)
+	return studio, nil
 }
 
 func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
