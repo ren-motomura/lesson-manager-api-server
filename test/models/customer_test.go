@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
@@ -59,5 +60,11 @@ func TestCustomer(t *testing.T) {
 
 	if customer.ID != customers[0].ID {
 		t.Fatal("invalid ID")
+	}
+
+	customers[0].Delete()
+	_, err = models.FindCustomerByCompanyAndCardID(company, "card0")
+	if err != errs.ErrNotFound {
+		t.Fatal("fail to delete")
 	}
 }

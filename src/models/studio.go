@@ -11,6 +11,7 @@ type Studio struct {
 	Name      string
 	CompanyID int
 	CreatedAt time.Time
+	IsValid   bool
 }
 
 func registerStudio(dbMap *gorp.DbMap) {
@@ -19,6 +20,22 @@ func registerStudio(dbMap *gorp.DbMap) {
 	t.ColMap("Name").Rename("name")
 	t.ColMap("CompanyID").Rename("company_id")
 	t.ColMap("CreatedAt").Rename("created_at")
+	t.ColMap("IsValid").Rename("is_valid")
+}
+
+func (self *Studio) Delete() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	self.IsValid = false
+	_, err = db.Update(self)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
@@ -27,7 +44,7 @@ func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
 		return nil, err
 	}
 
-	rows, err := db.Select(Studio{}, "select * from studios where company_id = ?", company.ID)
+	rows, err := db.Select(Studio{}, "select * from studios where company_id = ? and is_valid = ?", company.ID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +77,7 @@ func CreateStudioInTx(name string, company *Company, tx *gorp.Transaction) (*Stu
 		Name:      name,
 		CompanyID: company.ID,
 		CreatedAt: time.Now(),
+		IsValid:   true,
 	}
 	err := tx.Insert(studio)
 	if err != nil {

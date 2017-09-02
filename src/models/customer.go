@@ -17,6 +17,7 @@ type Customer struct {
 	CardID      string
 	Credit      int
 	CreatedAt   time.Time
+	IsValid     bool
 }
 
 func registerCustomer(dbMap *gorp.DbMap) {
@@ -28,6 +29,22 @@ func registerCustomer(dbMap *gorp.DbMap) {
 	t.ColMap("CardID").Rename("card_id")
 	t.ColMap("Credit").Rename("credit")
 	t.ColMap("CreatedAt").Rename("created_at")
+	t.ColMap("IsValid").Rename("is_valid")
+}
+
+func (self *Customer) Delete() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	self.IsValid = false
+	_, err = db.Update(self)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SelectCustomersByCompany(company *Company) ([]*Customer, error) {
@@ -36,7 +53,7 @@ func SelectCustomersByCompany(company *Company) ([]*Customer, error) {
 		return nil, err
 	}
 
-	rows, err := db.Select(Customer{}, "select * from customers where company_id = ?", company.ID)
+	rows, err := db.Select(Customer{}, "select * from customers where company_id = ? and is_valid = ?", company.ID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +74,7 @@ func FindCustomerByCompanyAndCardID(company *Company, cardID string) (*Customer,
 		return nil, err
 	}
 
-	rows, err := db.Select(Customer{}, "select * from customers where company_id = ? and card_id = ?", company.ID, cardID)
+	rows, err := db.Select(Customer{}, "select * from customers where company_id = ? and card_id = ? and is_valid = ?", company.ID, cardID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +112,7 @@ func CreateCustomerInTx(name string, description string, company *Company, cardI
 		CardID:      cardID,
 		Credit:      credit,
 		CreatedAt:   time.Now(),
+		IsValid:     true,
 	}
 	err := tx.Insert(customer)
 	if err != nil {

@@ -31,18 +31,32 @@ func TestStudio(t *testing.T) {
 		studios[i] = studio
 	}
 
-	selectedStudios, err := models.SelectStudiosByCompany(company)
-	if err != nil {
-		t.Fatal(err)
+	{
+		selectedStudios, err := models.SelectStudiosByCompany(company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(studios) != len(selectedStudios) {
+			t.Fatal(err)
+		}
+
+		for i, s := range selectedStudios {
+			if studios[i].Name != s.Name {
+				t.Fatal("invalid name")
+			}
+		}
 	}
 
-	if len(studios) != len(selectedStudios) {
-		t.Fatal(err)
-	}
+	{
+		studios[0].Delete()
+		selectedStudios, err := models.SelectStudiosByCompany(company)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	for i, s := range selectedStudios {
-		if studios[i].Name != s.Name {
-			t.Fatal("invalid name")
+		if len(studios)-len(selectedStudios) != 1 {
+			t.Fatal("fail to delete")
 		}
 	}
 }

@@ -63,10 +63,11 @@ func TestLesson(t *testing.T) {
 	}
 
 	now := time.Now()
+	lessons := make([]*models.Lesson, 0, len(studios)*len(staffs)*len(customers))
 	for _, studio := range studios {
 		for _, staff := range staffs {
 			for _, customer := range customers {
-				_, err := models.CreateLesson(
+				lesson, err := models.CreateLesson(
 					company,
 					studio,
 					staff,
@@ -77,6 +78,7 @@ func TestLesson(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				lessons = append(lessons, lesson)
 			}
 		}
 	}
@@ -132,6 +134,18 @@ func TestLesson(t *testing.T) {
 		}
 
 		if len(selectedLessons) != len(studios)*len(staffs) {
+			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+	}
+
+	{ // 削除のテスト
+		lessons[0].Delete()
+		selectedLessons, err := models.SelectLessonsByCompanyAndTakenAtRange(company, now.Add(-time.Second), now.Add(time.Second))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(selectedLessons) != len(studios)*len(staffs)*len(customers)-1 {
 			t.Fatalf("Invalid count: %d", len(selectedLessons))
 		}
 	}

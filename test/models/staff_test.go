@@ -31,18 +31,32 @@ func TestStaff(t *testing.T) {
 		staffs[i] = staff
 	}
 
-	selectedStaffs, err := models.SelectStaffsByCompany(company)
-	if err != nil {
-		t.Fatal(err)
+	{
+		selectedStaffs, err := models.SelectStaffsByCompany(company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(staffs) != len(selectedStaffs) {
+			t.Fatal(err)
+		}
+
+		for i, s := range selectedStaffs {
+			if staffs[i].Name != s.Name {
+				t.Fatal("invalid name")
+			}
+		}
 	}
 
-	if len(staffs) != len(selectedStaffs) {
-		t.Fatal(err)
-	}
+	{
+		staffs[0].Delete()
+		selectedStaffs, err := models.SelectStaffsByCompany(company)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	for i, s := range selectedStaffs {
-		if staffs[i].Name != s.Name {
-			t.Fatal("invalid name")
+		if len(staffs)-len(selectedStaffs) != 1 {
+			t.Fatalf("len(staffs): %d, len(selectedStaffs): %d", len(staffs), len(selectedStaffs))
 		}
 	}
 }

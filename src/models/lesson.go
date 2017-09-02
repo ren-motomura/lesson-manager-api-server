@@ -14,6 +14,7 @@ type Lesson struct {
 	CustomerID int
 	Fee        int
 	TakenAt    time.Time
+	IsValid    bool
 }
 
 func registerLesson(dbMap *gorp.DbMap) {
@@ -25,6 +26,22 @@ func registerLesson(dbMap *gorp.DbMap) {
 	t.ColMap("CustomerID").Rename("customer_id")
 	t.ColMap("Fee").Rename("fee")
 	t.ColMap("TakenAt").Rename("taken_at")
+	t.ColMap("IsValid").Rename("is_valid")
+}
+
+func (self *Lesson) Delete() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	self.IsValid = false
+	_, err = db.Update(self)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SelectLessonsByCompanyAndTakenAtRange(company *Company, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
@@ -33,7 +50,7 @@ func SelectLessonsByCompanyAndTakenAtRange(company *Company, takenAtFrom time.Ti
 		return nil, err
 	}
 
-	rows, err := db.Select(Lesson{}, "select * from lessons where company_id = ? and taken_at >= ? and taken_at < ?", company.ID, takenAtFrom, takenAtTo)
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and company_id = ? and taken_at >= ? and taken_at < ?", true, company.ID, takenAtFrom, takenAtTo)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +67,7 @@ func SelectLessonsByStaffAndTakenAtRange(staff *Staff, takenAtFrom time.Time, ta
 		return nil, err
 	}
 
-	rows, err := db.Select(Lesson{}, "select * from lessons where staff_id = ? and taken_at >= ? and taken_at < ?", staff.ID, takenAtFrom, takenAtTo)
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and staff_id = ? and taken_at >= ? and taken_at < ?", true, staff.ID, takenAtFrom, takenAtTo)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +84,7 @@ func SelectLessonsByCustomerAndTakenAtRange(customer *Customer, takenAtFrom time
 		return nil, err
 	}
 
-	rows, err := db.Select(Lesson{}, "select * from lessons where customer_id = ? and taken_at >= ? and taken_at < ?", customer.ID, takenAtFrom, takenAtTo)
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and customer_id = ? and taken_at >= ? and taken_at < ?", true, customer.ID, takenAtFrom, takenAtTo)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +101,7 @@ func SelectLessonsByStudioAndTakenAtRange(studio *Studio, takenAtFrom time.Time,
 		return nil, err
 	}
 
-	rows, err := db.Select(Lesson{}, "select * from lessons where studio_id = ? and taken_at >= ? and taken_at < ?", studio.ID, takenAtFrom, takenAtTo)
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and studio_id = ? and taken_at >= ? and taken_at < ?", true, studio.ID, takenAtFrom, takenAtTo)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +137,7 @@ func CreateLessonInTx(company *Company, studio *Studio, staff *Staff, customer *
 		CustomerID: customer.ID,
 		Fee:        fee,
 		TakenAt:    takenAt,
+		IsValid:    true,
 	}
 	err := tx.Insert(lesson)
 	if err != nil {
