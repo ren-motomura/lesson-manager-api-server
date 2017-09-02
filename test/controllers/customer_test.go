@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/controllers"
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
@@ -94,4 +95,68 @@ func TestCreateCustomerWithCard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestDeleteCustomer(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	{
+		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		reqParam := &pb.DeleteCustomerRequest{
+			Id: int32(customer.ID),
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("DeleteCustomer", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+
+		_, err = models.FindCustomer(customer.ID, false, nil)
+		if err != errs.ErrNotFound {
+			t.Fatal("not deleted")
+		}
+	}
+
+	{ // other company customer
+		otherCompany, err := models.CreateCompany("sample company2", "sample2@example.com", "password")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		otherCompanyCustomer, err := models.CreateCustomer("sample customer2", "desc", otherCompany)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		reqParam := &pb.DeleteStudioRequest{
+			Id: int32(otherCompanyCustomer.ID),
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("DeleteCustomer", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 403 {
+			t.Fatalf("status: %d", frw.status)
+		}
+	}
+
 }
