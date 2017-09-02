@@ -9,6 +9,9 @@ import (
 )
 
 func TestRouteWithNotExistFunc(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	req := testutils.BuildRequest("notexist", []byte{}, "")
 	pr, err := procesures.ParseRequest(req)
 	if err != nil {

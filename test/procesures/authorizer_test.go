@@ -9,6 +9,9 @@ import (
 )
 
 func TestAuthorize(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	company, err := models.CreateCompany("test", "test@example.com", "password")
 	if err != nil {
 		t.Fatal(err)

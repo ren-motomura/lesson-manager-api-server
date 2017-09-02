@@ -6,9 +6,13 @@ import (
 	"testing"
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
+	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
 func TestCompany(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	name := "サードダンススクール"
 	emailAddress := "third@example.com"
 	password := fmt.Sprintf("%x", sha256.Sum256([]byte("password")))

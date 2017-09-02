@@ -9,6 +9,9 @@ import (
 )
 
 func TestParseRequest(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	funcName := "hoge"
 	data := []byte{1, 2, 3, 4, 5}
 

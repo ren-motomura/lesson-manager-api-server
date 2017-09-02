@@ -3,6 +3,7 @@ package testutils
 import (
 	"log"
 	"os"
+	"testing"
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 )
@@ -20,13 +21,24 @@ func PreProcess() {
 		log.Fatal(err)
 	}
 	db.TraceOn("[gorp SQL log]", &gorpLogger{})
-	err = db.TruncateTables()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func PostProcess() {
+}
+
+func Setup(t *testing.T) func(t *testing.T) {
+	db, err := models.Db()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.TruncateTables()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return func(t *testing.T) {
+		// teardown
+	}
 }
 
 func setEnv() error {

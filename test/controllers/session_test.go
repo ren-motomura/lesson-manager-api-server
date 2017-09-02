@@ -12,6 +12,9 @@ import (
 )
 
 func TestCreateSession(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	rawPassword := "password"
 	company, err := models.CreateCompany("sample", "sample@example.com", rawPassword)
 	if err != nil {

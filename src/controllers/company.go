@@ -62,7 +62,7 @@ func (createCompany) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 
 	setSessionToResponse(rw, session)
 	res, _ := proto.Marshal(&pb.CreateCompanyResponse{ // エラーは発生しないはず
-		Id:           int64(company.ID),
+		Id:           int32(company.ID),
 		Name:         company.Name,
 		EmailAddress: company.EmailAddress,
 		CreatedAt:    company.CreatedAt.Unix(),

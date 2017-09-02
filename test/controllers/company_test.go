@@ -11,6 +11,9 @@ import (
 )
 
 func TestCreateCompany(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
 	reqParam := &pb.CreateCompanyRequest{
 		Name:         "サンプル",
 		EmailAddress: "sample@expamle.com",
