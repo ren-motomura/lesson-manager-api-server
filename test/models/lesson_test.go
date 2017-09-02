@@ -71,6 +71,7 @@ func TestLesson(t *testing.T) {
 					staff,
 					customer,
 					6000,
+					models.PaymentTypeCard,
 					now,
 				)
 				if err != nil {
