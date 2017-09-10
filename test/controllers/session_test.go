@@ -43,7 +43,8 @@ func TestCreateSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !res.Success {
+	resCompany := res.Company
+	if int(resCompany.Id) != company.ID {
 		t.Fatal()
 	}
 }

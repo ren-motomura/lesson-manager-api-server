@@ -44,7 +44,12 @@ func (createSession) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 
 	setSessionToResponse(rw, session)
 	res, _ := proto.Marshal(&pb.CreateSessionResponse{ // エラーは発生しないはず
-		Success: true,
+		Company: &pb.Company{
+			Id:           int32(company.ID),
+			Name:         company.Name,
+			EmailAddress: company.EmailAddress,
+			CreatedAt:    company.CreatedAt.Unix(),
+		},
 	})
 	rw.WriteHeader(200)
 	rw.Write(res)

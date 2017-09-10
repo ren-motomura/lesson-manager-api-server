@@ -1,8 +1,6 @@
 package models_test
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"testing"
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
@@ -15,7 +13,7 @@ func TestCompany(t *testing.T) {
 
 	name := "サードダンススクール"
 	emailAddress := "third@example.com"
-	password := fmt.Sprintf("%x", sha256.Sum256([]byte("password")))
+	password := "password"
 	company, err := models.CreateCompany(name, emailAddress, password)
 	if err != nil {
 		t.Fatal(err)

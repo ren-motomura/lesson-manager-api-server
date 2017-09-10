@@ -37,10 +37,11 @@ func TestCreateCompany(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Name != reqParam.Name {
+	resCompany := res.Company
+	if resCompany.Name != reqParam.Name {
 		t.Fatal()
 	}
-	if res.EmailAddress != reqParam.EmailAddress {
+	if resCompany.EmailAddress != reqParam.EmailAddress {
 		t.Fatal()
 	}
 }
