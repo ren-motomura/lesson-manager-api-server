@@ -32,6 +32,13 @@ func TestStudio(t *testing.T) {
 	}
 
 	{
+		_, err = models.FindStudioByCompanyAndName(company, studios[0].Name)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	{
 		selectedStudios, err := models.SelectStudiosByCompany(company)
 		if err != nil {
 			t.Fatal(err)

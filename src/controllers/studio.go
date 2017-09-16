@@ -10,6 +10,33 @@ import (
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 )
 
+type selectStudios struct {
+}
+
+func (selectStudios) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	studios, err := models.SelectStudiosByCompany(r.Company)
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	var pbStudios []*pb.Studio
+	for _, s := range studios {
+		pbStudios = append(pbStudios, &pb.Studio{
+			Id:          int32(s.ID),
+			Name:        s.Name,
+			Address:     s.Address,
+			PhoneNumber: s.PhoneNumber,
+			CreatedAt:   s.CreatedAt.Unix(),
+		})
+	}
+	res, _ := proto.Marshal(&pb.SelectStudiosResponse{
+		Studios: pbStudios,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
 type createStudio struct {
 }
 
@@ -21,9 +48,16 @@ func (createStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 		return
 	}
 
+	_, err = models.FindStudioByCompanyAndName(r.Company, param.Name)
+	if err != errs.ErrNotFound {
+		writeErrorResponse(rw, 409, pb.ErrorType_ALREADY_EXIST, "")
+		return
+	}
+
 	studio, err := models.CreateStudio(param.Name, param.Address, param.PhoneNumber, r.Company)
 	if err != nil {
-		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		// 存在チェックの直後に insert されるとエラーになり得るが、このサービスの用途から考えてまず起こらないので無視
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 

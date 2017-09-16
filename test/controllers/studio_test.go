@@ -12,6 +12,61 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
+func TestSelectStudios(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	req := testutils.BuildRequest("SelectStudios", []byte{}, session.ID)
+	pr, err := procesures.ParseRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.SelectStudiosResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Studios) != 0 {
+			t.Fatal()
+		}
+	}
+
+	studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.SelectStudiosResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Studios) != 1 {
+			t.Fatal()
+		}
+		if res.Studios[0].Name != studio.Name {
+			t.Fatal()
+		}
+	}
+}
+
 func TestCreateStudio(t *testing.T) {
 	teardown := testutils.Setup(t)
 	defer teardown(t)
@@ -25,24 +80,45 @@ func TestCreateStudio(t *testing.T) {
 		PhoneNumber: "00-0000-0000",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
+
 	req := testutils.BuildRequest("CreateStudio", reqBin, session.ID)
 	pr, err := procesures.ParseRequest(req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	frw := fakeResponseWriter{}
-	controllers.Route(&frw, pr)
 
-	if frw.status != 200 {
-		t.Fatalf("status: %d", frw.status)
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.CreateStudioResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res.Studio.Name != studioName {
+			t.Fatal("unexpected name")
+		}
 	}
-	res := &pb.CreateStudioResponse{}
-	err = proto.Unmarshal(frw.body, res)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if res.Studio.Name != studioName {
-		t.Fatal("unexpected name")
+
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 409 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.ErrorResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res.ErrorType != pb.ErrorType_ALREADY_EXIST {
+			t.Fatal()
+		}
 	}
 }
 

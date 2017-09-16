@@ -86,6 +86,23 @@ func FindStudio(id int, forUpdate bool, tx *gorp.Transaction) (*Studio, error) {
 	return studio, nil
 }
 
+func FindStudioByCompanyAndName(company *Company, name string) (*Studio, error) {
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Studio{}, "select * from studios where company_id = ? and name = ?", company.ID, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	studio := rows[0].(*Studio)
+	return studio, nil
+}
+
 func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
 	db, err := Db()
 	if err != nil {

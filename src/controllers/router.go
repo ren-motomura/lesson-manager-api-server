@@ -15,6 +15,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": false,
 		"delegate":             createSession{},
 	},
+	"SelectStudios": {
+		"requireAuthorization": true,
+		"delegate":             selectStudios{},
+	},
 	"CreateStudio": {
 		"requireAuthorization": true,
 		"delegate":             createStudio{},
