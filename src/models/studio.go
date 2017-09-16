@@ -109,7 +109,7 @@ func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
 		return nil, err
 	}
 
-	rows, err := db.Select(Studio{}, "select * from studios where company_id = ? and is_valid = ?", company.ID, true)
+	rows, err := db.Select(Studio{}, "select * from studios where company_id = ? and is_valid = ? order by created_at asc", company.ID, true)
 	if err != nil {
 		return nil, err
 	}
