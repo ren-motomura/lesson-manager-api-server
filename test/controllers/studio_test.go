@@ -20,7 +20,9 @@ func TestCreateStudio(t *testing.T) {
 	_, session := testutils.CreateCompanyAndSession()
 
 	reqParam := &pb.CreateStudioRequest{
-		Name: studioName,
+		Name:        studioName,
+		Address:     "sample address",
+		PhoneNumber: "00-0000-0000",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
 	req := testutils.BuildRequest("CreateStudio", reqBin, session.ID)
@@ -51,7 +53,7 @@ func TestDeleteStudio(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 
 	{
-		studio, err := models.CreateStudio("sample studio", company)
+		studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -84,7 +86,7 @@ func TestDeleteStudio(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		otherCompanyStudio, err := models.CreateStudio("sample studio2", otherCompany)
+		otherCompanyStudio, err := models.CreateStudio("sample studio2", "sample address", "00-0000-0000", otherCompany)
 		if err != nil {
 			t.Fatal(err)
 		}

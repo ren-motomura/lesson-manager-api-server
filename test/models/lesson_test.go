@@ -27,6 +27,8 @@ func TestLesson(t *testing.T) {
 	for i := 0; i < len(studios); i++ {
 		studio, err := models.CreateStudio(
 			"sample studio"+strconv.Itoa(i),
+			"sample address",
+			"00-0000-0000",
 			company,
 		)
 		if err != nil {

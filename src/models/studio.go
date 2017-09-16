@@ -8,17 +8,21 @@ import (
 )
 
 type Studio struct {
-	ID        int
-	Name      string
-	CompanyID int
-	CreatedAt time.Time
-	IsValid   bool
+	ID          int
+	Name        string
+	Address     string
+	PhoneNumber string
+	CompanyID   int
+	CreatedAt   time.Time
+	IsValid     bool
 }
 
 func registerStudio(dbMap *gorp.DbMap) {
 	t := dbMap.AddTableWithName(Studio{}, "studios").SetKeys(true, "ID")
 	t.ColMap("ID").Rename("id")
 	t.ColMap("Name").Rename("name")
+	t.ColMap("Address").Rename("address")
+	t.ColMap("PhoneNumber").Rename("phone_number")
 	t.ColMap("CompanyID").Rename("company_id")
 	t.ColMap("CreatedAt").Rename("created_at")
 	t.ColMap("IsValid").Rename("is_valid")
@@ -99,14 +103,14 @@ func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
 	return studios, nil
 }
 
-func CreateStudio(name string, company *Company) (*Studio, error) {
+func CreateStudio(name string, address string, phoneNumber string, company *Company) (*Studio, error) {
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	tx, _ := db.Begin()
-	studio, err := CreateStudioInTx(name, company, tx)
+	studio, err := CreateStudioInTx(name, address, phoneNumber, company, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -116,12 +120,14 @@ func CreateStudio(name string, company *Company) (*Studio, error) {
 	return studio, nil
 }
 
-func CreateStudioInTx(name string, company *Company, tx *gorp.Transaction) (*Studio, error) {
+func CreateStudioInTx(name string, address string, phoneNumber string, company *Company, tx *gorp.Transaction) (*Studio, error) {
 	studio := &Studio{
-		Name:      name,
-		CompanyID: company.ID,
-		CreatedAt: time.Now(),
-		IsValid:   true,
+		Name:        name,
+		Address:     address,
+		PhoneNumber: phoneNumber,
+		CompanyID:   company.ID,
+		CreatedAt:   time.Now(),
+		IsValid:     true,
 	}
 	err := tx.Insert(studio)
 	if err != nil {

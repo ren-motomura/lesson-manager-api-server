@@ -21,7 +21,7 @@ func (createStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 		return
 	}
 
-	studio, err := models.CreateStudio(param.Name, r.Company)
+	studio, err := models.CreateStudio(param.Name, param.Address, param.PhoneNumber, r.Company)
 	if err != nil {
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return

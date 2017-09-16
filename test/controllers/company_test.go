@@ -16,7 +16,7 @@ func TestCreateCompany(t *testing.T) {
 
 	reqParam := &pb.CreateCompanyRequest{
 		Name:         "サンプル",
-		EmailAddress: "sample@expamle.com",
+		EmailAddress: "sample@example.com",
 		Password:     "password",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
