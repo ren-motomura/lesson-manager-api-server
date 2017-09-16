@@ -75,10 +75,10 @@ func TestCreateStudio(t *testing.T) {
 	_, session := testutils.CreateCompanyAndSession()
 
 	reqParam := &pb.CreateStudioRequest{
-		Name:          studioName,
-		Address:       "sample address",
-		PhoneNumber:   "00-0000-0000",
-		ImageFileName: "",
+		Name:        studioName,
+		Address:     "sample address",
+		PhoneNumber: "00-0000-0000",
+		ImageLink:   "",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
 
