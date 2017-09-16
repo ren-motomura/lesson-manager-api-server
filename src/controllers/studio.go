@@ -54,7 +54,7 @@ func (createStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 		return
 	}
 
-	studio, err := models.CreateStudio(param.Name, param.Address, param.PhoneNumber, r.Company)
+	studio, err := models.CreateStudio(param.Name, param.Address, param.PhoneNumber, r.Company, param.ImageFileName)
 	if err != nil {
 		// 存在チェックの直後に insert されるとエラーになり得るが、このサービスの用途から考えてまず起こらないので無視
 		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
@@ -63,9 +63,10 @@ func (createStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 
 	res, _ := proto.Marshal(&pb.CreateStudioResponse{ // エラーは発生しないはず
 		Studio: &pb.Studio{
-			Id:        int32(studio.ID),
-			Name:      studio.Name,
-			CreatedAt: studio.CreatedAt.Unix(),
+			Id:            int32(studio.ID),
+			Name:          studio.Name,
+			CreatedAt:     studio.CreatedAt.Unix(),
+			ImageFileName: studio.ImageFileName,
 		},
 	})
 	rw.WriteHeader(200)

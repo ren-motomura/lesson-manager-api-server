@@ -30,6 +30,7 @@ func TestLesson(t *testing.T) {
 			"sample address",
 			"00-0000-0000",
 			company,
+			"",
 		)
 		if err != nil {
 			t.Fatal(err)

@@ -41,7 +41,7 @@ func TestSelectStudios(t *testing.T) {
 		}
 	}
 
-	studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company)
+	studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,9 +75,10 @@ func TestCreateStudio(t *testing.T) {
 	_, session := testutils.CreateCompanyAndSession()
 
 	reqParam := &pb.CreateStudioRequest{
-		Name:        studioName,
-		Address:     "sample address",
-		PhoneNumber: "00-0000-0000",
+		Name:          studioName,
+		Address:       "sample address",
+		PhoneNumber:   "00-0000-0000",
+		ImageFileName: "",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
 
@@ -129,7 +130,7 @@ func TestDeleteStudio(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 
 	{
-		studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company)
+		studio, err := models.CreateStudio("sample studio", "sample address", "00-0000-0000", company, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -162,7 +163,7 @@ func TestDeleteStudio(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		otherCompanyStudio, err := models.CreateStudio("sample studio2", "sample address", "00-0000-0000", otherCompany)
+		otherCompanyStudio, err := models.CreateStudio("sample studio2", "sample address", "00-0000-0000", otherCompany, "")
 		if err != nil {
 			t.Fatal(err)
 		}

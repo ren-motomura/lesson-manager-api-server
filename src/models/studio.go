@@ -8,13 +8,14 @@ import (
 )
 
 type Studio struct {
-	ID          int
-	Name        string
-	Address     string
-	PhoneNumber string
-	CompanyID   int
-	CreatedAt   time.Time
-	IsValid     bool
+	ID            int
+	Name          string
+	Address       string
+	PhoneNumber   string
+	CompanyID     int
+	CreatedAt     time.Time
+	IsValid       bool
+	ImageFileName string
 }
 
 func registerStudio(dbMap *gorp.DbMap) {
@@ -26,6 +27,7 @@ func registerStudio(dbMap *gorp.DbMap) {
 	t.ColMap("CompanyID").Rename("company_id")
 	t.ColMap("CreatedAt").Rename("created_at")
 	t.ColMap("IsValid").Rename("is_valid")
+	t.ColMap("ImageFileName").Rename("image_file_name")
 }
 
 func (self *Studio) Delete() error {
@@ -120,14 +122,14 @@ func SelectStudiosByCompany(company *Company) ([]*Studio, error) {
 	return studios, nil
 }
 
-func CreateStudio(name string, address string, phoneNumber string, company *Company) (*Studio, error) {
+func CreateStudio(name string, address string, phoneNumber string, company *Company, imageFileName string) (*Studio, error) {
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	tx, _ := db.Begin()
-	studio, err := CreateStudioInTx(name, address, phoneNumber, company, tx)
+	studio, err := CreateStudioInTx(name, address, phoneNumber, company, imageFileName, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -137,14 +139,15 @@ func CreateStudio(name string, address string, phoneNumber string, company *Comp
 	return studio, nil
 }
 
-func CreateStudioInTx(name string, address string, phoneNumber string, company *Company, tx *gorp.Transaction) (*Studio, error) {
+func CreateStudioInTx(name string, address string, phoneNumber string, company *Company, imageFileName string, tx *gorp.Transaction) (*Studio, error) {
 	studio := &Studio{
-		Name:        name,
-		Address:     address,
-		PhoneNumber: phoneNumber,
-		CompanyID:   company.ID,
-		CreatedAt:   time.Now(),
-		IsValid:     true,
+		Name:          name,
+		Address:       address,
+		PhoneNumber:   phoneNumber,
+		CompanyID:     company.ID,
+		CreatedAt:     time.Now(),
+		IsValid:       true,
+		ImageFileName: imageFileName,
 	}
 	err := tx.Insert(studio)
 	if err != nil {
