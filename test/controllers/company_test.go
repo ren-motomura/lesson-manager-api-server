@@ -45,3 +45,36 @@ func TestCreateCompany(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+func TestSetCompanyImageLink(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	_, session := testutils.CreateCompanyAndSession()
+
+	reqParam := &pb.SetCompanyImageLinkRequest{
+		ImageLink: "http://example.com/image",
+	}
+	reqBin, _ := proto.Marshal(reqParam)
+	req := testutils.BuildRequest("SetCompanyImageLink", reqBin, session.ID)
+	pr, err := procesures.ParseRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	frw := fakeResponseWriter{}
+	controllers.Route(&frw, pr)
+
+	if frw.status != 200 {
+		t.Fatalf("status: %d", frw.status)
+	}
+	res := &pb.SetCompanyImageLinkResponse{}
+	err = proto.Unmarshal(frw.body, res)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resCompany := res.Company
+	if resCompany.ImageLInk != reqParam.ImageLink {
+		t.Fatal()
+	}
+}

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
@@ -78,6 +79,7 @@ type updateStudio struct {
 }
 
 func (updateStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	time.Sleep(time.Second * 3)
 	param := &pb.UpdateStudioRequest{}
 	err := proto.Unmarshal(r.Data, param)
 	if err != nil {
@@ -113,10 +115,12 @@ func (updateStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 
 	res, _ := proto.Marshal(&pb.UpdateStudioResponse{ // エラーは発生しないはず
 		Studio: &pb.Studio{
-			Id:        int32(studio.ID),
-			Name:      studio.Name,
-			CreatedAt: studio.CreatedAt.Unix(),
-			ImageLink: studio.ImageLink,
+			Id:          int32(studio.ID),
+			Name:        studio.Name,
+			Address:     studio.Address,
+			PhoneNumber: studio.PhoneNumber,
+			CreatedAt:   studio.CreatedAt.Unix(),
+			ImageLink:   studio.ImageLink,
 		},
 	})
 	rw.WriteHeader(200)

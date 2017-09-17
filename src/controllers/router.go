@@ -11,6 +11,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": false,
 		"delegate":             createCompany{},
 	},
+	"SetCompanyImageLink": {
+		"requireAuthorization": true,
+		"delegate":             setCompanyImageLink{},
+	},
 	"CreateSession": {
 		"requireAuthorization": false,
 		"delegate":             createSession{},

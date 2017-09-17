@@ -32,16 +32,15 @@ func TestCompany(t *testing.T) {
 		)
 	}
 
+	imageLink := "http://example.com/image"
+	company.ImageLink = imageLink
+	company.Update()
+
 	company, err = models.FindCompany(company.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if company.Name != name {
-		t.Fatal(
-			"Invalid name was returned! expected: ",
-			name,
-			", actual: ",
-			company.Name,
-		)
+	if company.ImageLink != imageLink {
+		t.Fatal()
 	}
 }

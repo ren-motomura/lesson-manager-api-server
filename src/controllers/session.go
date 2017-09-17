@@ -49,6 +49,7 @@ func (createSession) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 			Name:         company.Name,
 			EmailAddress: company.EmailAddress,
 			CreatedAt:    company.CreatedAt.Unix(),
+			ImageLInk:    company.ImageLink,
 		},
 	})
 	rw.WriteHeader(200)

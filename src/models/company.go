@@ -15,6 +15,7 @@ type Company struct {
 	EmailAddress string
 	Password     string
 	CreatedAt    time.Time
+	ImageLink    string
 }
 
 func registerCompany(dbMap *gorp.DbMap) {
@@ -24,6 +25,7 @@ func registerCompany(dbMap *gorp.DbMap) {
 	t.ColMap("EmailAddress").Rename("email_address")
 	t.ColMap("Password").Rename("password")
 	t.ColMap("CreatedAt").Rename("created_at")
+	t.ColMap("ImageLink").Rename("image_link")
 }
 
 func (self *Company) ComparePassword(rawPassword string) bool {
@@ -91,6 +93,7 @@ func CreateCompanyInTx(name string, emailAddress string, rawPassword string, tx 
 		EmailAddress: emailAddress,
 		Password:     generatePasswordHash(rawPassword),
 		CreatedAt:    time.Now(),
+		ImageLink:    "",
 	}
 	err := tx.Insert(company)
 	if err != nil {
@@ -98,4 +101,21 @@ func CreateCompanyInTx(name string, emailAddress string, rawPassword string, tx 
 	}
 
 	return company, nil
+}
+
+func (self *Company) Update() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	tx, _ := db.Begin()
+	_, err = tx.Update(self)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
 }
