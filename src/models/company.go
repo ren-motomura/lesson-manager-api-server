@@ -103,6 +103,10 @@ func CreateCompanyInTx(name string, emailAddress string, rawPassword string, tx 
 	return company, nil
 }
 
+func (self *Company) SetPassword(rawPassword string) {
+	self.Password = generatePasswordHash(rawPassword)
+}
+
 func (self *Company) Update() error {
 	db, err := Db()
 	if err != nil {

@@ -104,3 +104,34 @@ func (setCompanyImageLink) Execute(rw http.ResponseWriter, r *procesures.ParsedR
 	rw.WriteHeader(200)
 	rw.Write(res)
 }
+
+type setCompanyPassword struct {
+}
+
+func (setCompanyPassword) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.SetCompanyPasswordRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 409, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	r.Company.SetPassword(param.Password)
+	err = r.Company.Update()
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 409, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.SetCompanyImageLinkResponse{ // エラーは発生しないはず
+		Company: &pb.Company{
+			Id:           int32(r.Company.ID),
+			Name:         r.Company.Name,
+			EmailAddress: r.Company.EmailAddress,
+			CreatedAt:    r.Company.CreatedAt.Unix(),
+			ImageLInk:    r.Company.ImageLink,
+		},
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}

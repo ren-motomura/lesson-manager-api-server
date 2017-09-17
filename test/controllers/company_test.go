@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/controllers"
+	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
@@ -73,8 +74,45 @@ func TestSetCompanyImageLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resCompany := res.Company
-	if resCompany.ImageLInk != reqParam.ImageLink {
+	if res.Company.ImageLInk != reqParam.ImageLink {
+		t.Fatal()
+	}
+}
+
+func TestSetCompanyPassword(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	reqParam := &pb.SetCompanyPasswordRequest{
+		Password: "__newpassword",
+	}
+	reqBin, _ := proto.Marshal(reqParam)
+	req := testutils.BuildRequest("SetCompanyPassword", reqBin, session.ID)
+	pr, err := procesures.ParseRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	frw := fakeResponseWriter{}
+	controllers.Route(&frw, pr)
+
+	if frw.status != 200 {
+		t.Fatalf("status: %d", frw.status)
+	}
+	res := &pb.SetCompanyImageLinkResponse{}
+	err = proto.Unmarshal(frw.body, res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	company2, err := models.FindCompany(company.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if company.Password == company2.Password {
 		t.Fatal()
 	}
 }
