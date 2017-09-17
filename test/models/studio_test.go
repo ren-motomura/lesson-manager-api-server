@@ -66,4 +66,24 @@ func TestStudio(t *testing.T) {
 			t.Fatal("fail to delete")
 		}
 	}
+
+	{
+		s := studios[1]
+		s.Address = "updated address"
+		s.PhoneNumber = "updated number"
+		s.ImageLink = "http://example.com/image"
+		err = s.Update()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		res, err := models.FindStudio(s.ID, false, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.Address != s.Address || res.PhoneNumber != s.PhoneNumber || res.ImageLink != s.ImageLink {
+			t.Fatal()
+		}
+	}
 }

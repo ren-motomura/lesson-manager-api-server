@@ -27,6 +27,7 @@ func (selectStudios) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 			Name:        s.Name,
 			Address:     s.Address,
 			PhoneNumber: s.PhoneNumber,
+			ImageLink:   s.ImageLink,
 			CreatedAt:   s.CreatedAt.Unix(),
 		})
 	}
@@ -62,6 +63,55 @@ func (createStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest)
 	}
 
 	res, _ := proto.Marshal(&pb.CreateStudioResponse{ // エラーは発生しないはず
+		Studio: &pb.Studio{
+			Id:        int32(studio.ID),
+			Name:      studio.Name,
+			CreatedAt: studio.CreatedAt.Unix(),
+			ImageLink: studio.ImageLink,
+		},
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
+type updateStudio struct {
+}
+
+func (updateStudio) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.UpdateStudioRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	studio, err := models.FindStudio(int(param.Studio.Id), false, nil)
+	if err != nil {
+		if err == errs.ErrNotFound {
+			writeErrorResponse(rw, 404, pb.ErrorType_NOT_FOUND, "")
+			return
+		}
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if studio.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	// 名前は更新しない
+	studio.Address = param.Studio.Address
+	studio.PhoneNumber = param.Studio.PhoneNumber
+	studio.ImageLink = param.Studio.ImageLink
+
+	err = studio.Update()
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.UpdateStudioResponse{ // エラーは発生しないはず
 		Studio: &pb.Studio{
 			Id:        int32(studio.ID),
 			Name:      studio.Name,

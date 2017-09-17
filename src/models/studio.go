@@ -156,3 +156,20 @@ func CreateStudioInTx(name string, address string, phoneNumber string, company *
 
 	return studio, nil
 }
+
+func (self *Studio) Update() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	tx, _ := db.Begin()
+	_, err = tx.Update(self)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
+}
