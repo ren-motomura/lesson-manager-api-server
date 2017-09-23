@@ -42,6 +42,7 @@ func TestLesson(t *testing.T) {
 	for i := 0; i < len(staffs); i++ {
 		staff, err := models.CreateStaff(
 			"sample staff"+strconv.Itoa(i),
+			"",
 			company,
 		)
 		if err != nil {

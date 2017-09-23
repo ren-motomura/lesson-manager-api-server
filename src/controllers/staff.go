@@ -22,7 +22,7 @@ func (createStaff) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) 
 		return
 	}
 
-	staff, err := models.CreateStaff(param.Name, r.Company)
+	staff, err := models.CreateStaff(param.Name, param.ImageLink, r.Company)
 	if err != nil {
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
@@ -33,6 +33,7 @@ func (createStaff) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) 
 			Id:        int32(staff.ID),
 			Name:      staff.Name,
 			CreatedAt: staff.CreatedAt.Unix(),
+			ImageLink: staff.ImageLink,
 		},
 	})
 	rw.WriteHeader(200)

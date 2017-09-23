@@ -24,7 +24,7 @@ func TestStaff(t *testing.T) {
 
 	staffs := make([]*models.Staff, 3)
 	for i := 0; i < len(staffs); i++ {
-		staff, err := models.CreateStaff("sample staff"+strconv.Itoa(i), company)
+		staff, err := models.CreateStaff("sample staff"+strconv.Itoa(i), "", company)
 		if err != nil {
 			t.Fatal(err)
 		}

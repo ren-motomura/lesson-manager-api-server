@@ -21,7 +21,8 @@ func TestCreateStaff(t *testing.T) {
 	_, session := testutils.CreateCompanyAndSession()
 
 	reqParam := &pb.CreateStaffRequest{
-		Name: studioName,
+		Name:      studioName,
+		ImageLink: "",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
 	req := testutils.BuildRequest("CreateStaff", reqBin, session.ID)
@@ -52,7 +53,7 @@ func TestDeleteStaff(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 
 	{
-		staff, err := models.CreateStaff("sample staff", company)
+		staff, err := models.CreateStaff("sample staff", "", company)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -85,7 +86,7 @@ func TestDeleteStaff(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		otherCompanyStaff, err := models.CreateStaff("sample staff2", otherCompany)
+		otherCompanyStaff, err := models.CreateStaff("sample staff2", "", otherCompany)
 		if err != nil {
 			t.Fatal(err)
 		}

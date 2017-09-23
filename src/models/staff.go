@@ -14,6 +14,7 @@ type Staff struct {
 	CompanyID int
 	CreatedAt time.Time
 	IsValid   bool
+	ImageLink string
 }
 
 func registerStaff(dbMap *gorp.DbMap) {
@@ -23,6 +24,7 @@ func registerStaff(dbMap *gorp.DbMap) {
 	t.ColMap("CompanyID").Rename("company_id")
 	t.ColMap("CreatedAt").Rename("created_at")
 	t.ColMap("IsValid").Rename("is_valid")
+	t.ColMap("ImageLink").Rename("image_link")
 }
 
 func (self *Staff) Delete() error {
@@ -100,14 +102,14 @@ func SelectStaffsByCompany(company *Company) ([]*Staff, error) {
 	return staffs, nil
 }
 
-func CreateStaff(name string, company *Company) (*Staff, error) {
+func CreateStaff(name string, imageLink string, company *Company) (*Staff, error) {
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	tx, _ := db.Begin()
-	staff, err := CreateStaffInTx(name, company, tx)
+	staff, err := CreateStaffInTx(name, imageLink, company, tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -117,12 +119,13 @@ func CreateStaff(name string, company *Company) (*Staff, error) {
 	return staff, nil
 }
 
-func CreateStaffInTx(name string, company *Company, tx *gorp.Transaction) (*Staff, error) {
+func CreateStaffInTx(name string, imageLink string, company *Company, tx *gorp.Transaction) (*Staff, error) {
 	staff := &Staff{
 		Name:      name,
 		CompanyID: company.ID,
 		CreatedAt: time.Now(),
 		IsValid:   true,
+		ImageLink: imageLink,
 	}
 	err := tx.Insert(staff)
 	if err != nil {
