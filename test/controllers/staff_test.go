@@ -13,6 +13,61 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
+func TestSelectStaffs(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	req := testutils.BuildRequest("SelectStaffs", []byte{}, session.ID)
+	pr, err := procesures.ParseRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.SelectStaffsResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Staffs) != 0 {
+			t.Fatal()
+		}
+	}
+
+	staff, err := models.CreateStaff("sample staff", "", company)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.SelectStaffsResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Staffs) != 1 {
+			t.Fatal()
+		}
+		if res.Staffs[0].Name != staff.Name {
+			t.Fatal()
+		}
+	}
+}
+
 func TestCreateStaff(t *testing.T) {
 	teardown := testutils.Setup(t)
 	defer teardown(t)

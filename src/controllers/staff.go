@@ -11,6 +11,32 @@ import (
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 )
 
+type selectStaffs struct {
+}
+
+func (selectStaffs) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	staffs, err := models.SelectStaffsByCompany(r.Company)
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	var pbStaffs []*pb.Staff
+	for _, s := range staffs {
+		pbStaffs = append(pbStaffs, &pb.Staff{
+			Id:        int32(s.ID),
+			Name:      s.Name,
+			ImageLink: s.ImageLink,
+			CreatedAt: s.CreatedAt.Unix(),
+		})
+	}
+	res, _ := proto.Marshal(&pb.SelectStaffsResponse{
+		Staffs: pbStaffs,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
 type createStaff struct {
 }
 
