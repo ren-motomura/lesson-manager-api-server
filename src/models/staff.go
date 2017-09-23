@@ -134,3 +134,20 @@ func CreateStaffInTx(name string, imageLink string, company *Company, tx *gorp.T
 
 	return staff, nil
 }
+
+func (self *Staff) Update() error {
+	db, err := Db()
+	if err != nil {
+		return err
+	}
+
+	tx, _ := db.Begin()
+	_, err = tx.Update(self)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
+}

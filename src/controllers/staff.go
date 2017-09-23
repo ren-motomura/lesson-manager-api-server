@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 
@@ -55,6 +56,54 @@ func (createStaff) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) 
 	}
 
 	res, _ := proto.Marshal(&pb.CreateStaffResponse{ // エラーは発生しないはず
+		Staff: &pb.Staff{
+			Id:        int32(staff.ID),
+			Name:      staff.Name,
+			CreatedAt: staff.CreatedAt.Unix(),
+			ImageLink: staff.ImageLink,
+		},
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
+type updateStaff struct {
+}
+
+func (updateStaff) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	time.Sleep(time.Second * 3)
+	param := &pb.UpdateStaffRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	staff, err := models.FindStaff(int(param.Staff.Id), false, nil)
+	if err != nil {
+		if err == errs.ErrNotFound {
+			writeErrorResponse(rw, 404, pb.ErrorType_NOT_FOUND, "")
+			return
+		}
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if staff.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	// 名前は更新しない
+	staff.ImageLink = param.Staff.ImageLink
+
+	err = staff.Update()
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.UpdateStaffResponse{ // エラーは発生しないはず
 		Staff: &pb.Staff{
 			Id:        int32(staff.ID),
 			Name:      staff.Name,
