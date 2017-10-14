@@ -12,6 +12,73 @@ import (
 	"github.com/ren-motomura/lesson-manager-api-server/test/testutils"
 )
 
+func TestSelectCustomers(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	customer1, err := models.CreateCustomer("customer1", "desc", company)
+	if err != nil {
+		t.Fatal(err)
+	}
+	customer2, err := models.CreateCustomer("customer2", "desc", company)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// customer1 にだけカードを登録しておく
+	card, err := models.CreateCard("card1", customer1, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := testutils.BuildRequest("SelectCustomers", []byte{}, session.ID)
+	pr, err := procesures.ParseRequest(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	frw := fakeResponseWriter{}
+	controllers.Route(&frw, pr)
+
+	if frw.status != 200 {
+		t.Fatalf("status: %d", frw.status)
+	}
+	res := &pb.SelectCustomersResponse{}
+	err = proto.Unmarshal(frw.body, res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(res.Customers) != 2 {
+		t.Fatal()
+	}
+
+	if res.Customers[0].Name != customer1.Name {
+		t.Fatal()
+	}
+
+	if res.Customers[1].Name != customer2.Name {
+		t.Fatal()
+	}
+
+	if res.Customers[0].Card == nil {
+		t.Fatal()
+	}
+
+	if res.Customers[0].Card.Id != card.ID {
+		t.Fatal()
+	}
+
+	if int(res.Customers[0].Card.Credit) != card.Credit {
+		t.Fatal()
+	}
+
+	if res.Customers[1].Card != nil {
+		t.Fatal()
+	}
+}
+
 func TestCreateCustomer(t *testing.T) {
 	teardown := testutils.Setup(t)
 	defer teardown(t)

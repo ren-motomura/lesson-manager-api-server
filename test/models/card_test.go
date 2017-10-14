@@ -41,6 +41,30 @@ func TestCard(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	{
+		customer2, err := models.CreateCustomer(
+			"sample customer2",
+			"description",
+			company,
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = models.CreateCard("sample card2", customer2, 10000)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cards, err := models.SelectCardsByCustomerIds([]int{customer.ID, customer2.ID})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(cards) != 2 {
+			t.Fatal()
+		}
+	}
+
 	card.Delete()
 
 	_, err = models.FindCard(card.ID, false, nil)

@@ -10,6 +10,53 @@ import (
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 )
 
+type selectCustomers struct {
+}
+
+func (selectCustomers) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	customers, err := models.SelectCustomersByCompany(r.Company)
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+	customerIDs := make([]int, len(customers))
+	for i, customer := range customers {
+		customerIDs[i] = customer.ID
+	}
+	cards, err := models.SelectCardsByCustomerIds(customerIDs)
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+	customerID2Card := make(map[int]*models.Card)
+	for _, card := range cards {
+		customerID2Card[card.CustomerID] = card
+	}
+
+	pbCustomers := make([]*pb.Customer, len(customers))
+	for i, c := range customers {
+		var pbCard *pb.Card
+		card, exist := customerID2Card[c.ID]
+		if exist {
+			pbCard = &pb.Card{
+				Id:     card.ID,
+				Credit: int32(card.Credit),
+			}
+		}
+		pbCustomers[i] = &pb.Customer{
+			Id:          int32(c.ID),
+			Name:        c.Name,
+			Description: c.Description,
+			Card:        pbCard,
+		}
+	}
+	res, _ := proto.Marshal(&pb.SelectCustomersResponse{
+		Customers: pbCustomers,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
 type createCustomer struct {
 }
 

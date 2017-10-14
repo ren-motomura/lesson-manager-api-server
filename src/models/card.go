@@ -1,6 +1,8 @@
 package models
 
 import (
+	"strings"
+
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 
 	"github.com/go-gorp/gorp"
@@ -74,6 +76,33 @@ func FindCard(id string, forUpdate bool, tx *gorp.Transaction) (*Card, error) {
 	}
 	card := rows[0].(*Card)
 	return card, nil
+}
+
+func SelectCardsByCustomerIds(customerIDs []int) ([]*Card, error) {
+	if len(customerIDs) == 0 {
+		return []*Card{}, nil
+	}
+
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	placeholders := make([]string, len(customerIDs))
+	arguments := make([]interface{}, len(customerIDs))
+	for i, customerID := range customerIDs {
+		placeholders[i] = "?"
+		arguments[i] = customerID
+	}
+	rows, err := db.Select(Card{}, "select * from cards where customer_id in ("+strings.Join(placeholders, ",")+")", arguments...)
+	if err != nil {
+		return nil, err
+	}
+	cards := make([]*Card, len(rows))
+	for i, row := range rows {
+		cards[i] = row.(*Card)
+	}
+	return cards, nil
 }
 
 func CreateCard(id string, customer *Customer, credit int) (*Card, error) {
