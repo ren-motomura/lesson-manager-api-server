@@ -49,9 +49,15 @@ func (createStaff) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) 
 		return
 	}
 
+	_, err = models.FindStaffByCompanyAndName(r.Company, param.Name)
+	if err != errs.ErrNotFound {
+		writeErrorResponse(rw, 409, pb.ErrorType_ALREADY_EXIST, "")
+		return
+	}
+
 	staff, err := models.CreateStaff(param.Name, param.ImageLink, r.Company)
 	if err != nil {
-		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 

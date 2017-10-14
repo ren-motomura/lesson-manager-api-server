@@ -32,6 +32,13 @@ func TestStaff(t *testing.T) {
 	}
 
 	{
+		_, err = models.FindStaffByCompanyAndName(company, staffs[0].Name)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	{
 		selectedStaffs, err := models.SelectStaffsByCompany(company)
 		if err != nil {
 			t.Fatal(err)

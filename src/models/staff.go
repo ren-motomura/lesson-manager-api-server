@@ -85,6 +85,23 @@ func FindStaff(id int, forUpdate bool, tx *gorp.Transaction) (*Staff, error) {
 	return staff, nil
 }
 
+func FindStaffByCompanyAndName(company *Company, name string) (*Staff, error) {
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Staff{}, "select * from staffs where company_id = ? and name = ?", company.ID, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	staff := rows[0].(*Staff)
+	return staff, nil
+}
+
 func SelectStaffsByCompany(company *Company) ([]*Staff, error) {
 	db, err := Db()
 	if err != nil {
