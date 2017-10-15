@@ -316,9 +316,9 @@ func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReq
 		return
 	}
 
-	_, err = models.FindCardByCustomer(customer, false, nil)
-	if err != errs.ErrNotFound {
-		writeErrorResponse(rw, 409, pb.ErrorType_CONFLICT, "")
+	card, err := models.FindCardByCustomer(customer, false, nil)
+	if err != nil && err != errs.ErrNotFound {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
 		return
 	}
 
@@ -334,7 +334,16 @@ func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReq
 		return
 	}
 
-	card, err := models.CreateCardInTx(param.Card.Id, customer, int(param.Card.Credit), tx)
+	if card != nil {
+		err = card.DeleteInTx(tx)
+		if err != nil {
+			tx.Rollback()
+			writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+			return
+		}
+	}
+
+	newCard, err := models.CreateCardInTx(param.Card.Id, customer, int(param.Card.Credit), tx)
 	if err != nil {
 		tx.Rollback()
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
@@ -354,8 +363,8 @@ func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReq
 			Name:        customer.Name,
 			Description: customer.Description,
 			Card: &pb.Card{
-				Id:     card.ID,
-				Credit: int32(card.Credit),
+				Id:     newCard.ID,
+				Credit: int32(newCard.Credit),
 			},
 		},
 	})
