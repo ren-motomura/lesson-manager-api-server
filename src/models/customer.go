@@ -133,3 +133,13 @@ func CreateCustomerInTx(name string, description string, company *Company, tx *g
 
 	return customer, nil
 }
+
+func (self *Customer) UpdateInTx(tx *gorp.Transaction) error {
+	_, err := tx.Update(self)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}

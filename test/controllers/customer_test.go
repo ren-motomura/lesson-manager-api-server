@@ -164,6 +164,55 @@ func TestCreateCustomerWithCard(t *testing.T) {
 	}
 }
 
+func TestUpdateCustomer(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	{
+		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		updatedName := "update name"
+		updatedDescription := "updated description"
+		reqParam := &pb.UpdateCustomerRequest{
+			Customer: &pb.Customer{
+				Id:          int32(customer.ID),
+				Name:        updatedName,
+				Description: updatedDescription,
+			},
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("UpdateCustomer", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+
+		newCustomer, err := models.FindCustomer(customer.ID, false, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if newCustomer.Name != updatedName {
+			t.Fatal()
+		}
+
+		if newCustomer.Description != updatedDescription {
+			t.Fatal()
+		}
+	}
+}
+
 func TestDeleteCustomer(t *testing.T) {
 	teardown := testutils.Setup(t)
 	defer teardown(t)

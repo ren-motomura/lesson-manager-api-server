@@ -131,6 +131,74 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 	rw.Write(res)
 }
 
+type updateCustomer struct {
+}
+
+func (updateCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.UpdateCustomerRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	customer, err := models.FindCustomer(int(param.Customer.Id), false, nil)
+	if err != nil {
+		if err == errs.ErrNotFound {
+			writeErrorResponse(rw, 404, pb.ErrorType_NOT_FOUND, "")
+			return
+		}
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if customer.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	db, err := models.Db()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	customer, err = models.FindCustomer(int(customer.ID), true, tx)
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	customer.Name = param.Customer.Name
+	customer.Description = param.Customer.Description
+
+	err = customer.UpdateInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.DeleteStaffResponse{ // エラーは発生しないはず
+		Success: true,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
+
 type deleteCustomer struct {
 }
 

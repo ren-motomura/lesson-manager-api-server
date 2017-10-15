@@ -63,6 +63,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": true,
 		"delegate":             createCustomer{},
 	},
+	"UpdateCustomer": {
+		"requireAuthorization": true,
+		"delegate":             updateCustomer{},
+	},
 	"DeleteCustomer": {
 		"requireAuthorization": true,
 		"delegate":             deleteCustomer{},
