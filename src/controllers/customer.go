@@ -192,8 +192,26 @@ func (updateCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		return
 	}
 
-	res, _ := proto.Marshal(&pb.DeleteStaffResponse{ // エラーは発生しないはず
-		Success: true,
+	card, err := models.FindCardByCustomer(customer, false, nil)
+	if err != nil && err != errs.ErrNotFound {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	var pbCard *pb.Card
+	if card != nil {
+		pbCard = &pb.Card{
+			Id:     card.ID,
+			Credit: int32(card.Credit),
+		}
+	}
+	res, _ := proto.Marshal(&pb.UpdateCustomerResponse{ // エラーは発生しないはず
+		Customer: &pb.Customer{
+			Id:          int32(customer.ID),
+			Name:        customer.Name,
+			Description: customer.Description,
+			Card:        pbCard,
+		},
 	})
 	rw.WriteHeader(200)
 	rw.Write(res)
