@@ -230,6 +230,12 @@ func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReq
 		return
 	}
 
+	_, err = models.FindCardByCustomer(customer, false, nil)
+	if err != errs.ErrNotFound {
+		writeErrorResponse(rw, 409, pb.ErrorType_CONFLICT, "")
+		return
+	}
+
 	db, err := models.Db()
 	if err != nil {
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")

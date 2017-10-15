@@ -78,6 +78,34 @@ func FindCard(id string, forUpdate bool, tx *gorp.Transaction) (*Card, error) {
 	return card, nil
 }
 
+func FindCardByCustomer(customer *Customer, forUpdate bool, tx *gorp.Transaction) (*Card, error) {
+	forUpStatement := ""
+	if forUpdate {
+		forUpStatement = "for update"
+	}
+
+	var selector Selector
+	if tx != nil {
+		selector = tx
+	} else {
+		db, err := Db()
+		if err != nil {
+			return nil, err
+		}
+		selector = db
+	}
+
+	rows, err := selector.Select(Card{}, "select * from cards where customer_id = ? "+forUpStatement, customer.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	card := rows[0].(*Card)
+	return card, nil
+}
+
 func SelectCardsByCustomerIds(customerIDs []int) ([]*Card, error) {
 	if len(customerIDs) == 0 {
 		return []*Card{}, nil

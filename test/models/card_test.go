@@ -41,6 +41,11 @@ func TestCard(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	_, err = models.FindCardByCustomer(customer, false, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	{
 		customer2, err := models.CreateCustomer(
 			"sample customer2",
