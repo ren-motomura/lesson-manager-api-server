@@ -371,3 +371,85 @@ func (setCardOnCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReq
 	rw.WriteHeader(200)
 	rw.Write(res)
 }
+
+type addCredit struct {
+}
+
+func (addCredit) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.AddCreditRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	customer, err := models.FindCustomer(int(param.CustomerId), false, nil)
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if customer.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	_, err = models.FindCardByCustomer(customer, false, nil)
+	if err == errs.ErrNotFound {
+		writeErrorResponse(rw, 400, pb.ErrorType_CARD_NOT_REGISTERED, "")
+		return
+	} else if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	db, err := models.Db()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	card, err := models.FindCardByCustomer(customer, true, tx)
+	if err == errs.ErrNotFound {
+		writeErrorResponse(rw, 400, pb.ErrorType_CARD_NOT_REGISTERED, "")
+		return
+	} else if err != nil {
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	card.Credit = card.Credit + int(param.Amount)
+	err = card.UpdateInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.AddCreditResponse{ // エラーは発生しないはず
+		Customer: &pb.Customer{
+			Id:          int32(customer.ID),
+			Name:        customer.Name,
+			Description: customer.Description,
+			Card: &pb.Card{
+				Id:     card.ID,
+				Credit: int32(card.Credit),
+			},
+		},
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}

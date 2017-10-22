@@ -343,3 +343,86 @@ func TestSetCardOnCustomer(t *testing.T) {
 		}
 	}
 }
+
+func TestAddCredit(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+
+	amount := 100
+	{
+		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		card, err := models.CreateCard("sample card", customer, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		reqParam := &pb.AddCreditRequest{
+			CustomerId: int32(customer.ID),
+			Amount:     int32(amount),
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("AddCredit", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.AddCreditResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		card, err = models.FindCard(res.Customer.Card.Id, false, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if card.Credit != amount {
+			t.Fatal()
+		}
+	}
+
+	{
+		customer, err := models.CreateCustomer("sample customer2", "desc", company)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		reqParam := &pb.AddCreditRequest{
+			CustomerId: int32(customer.ID),
+			Amount:     int32(amount),
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("AddCredit", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 400 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.ErrorResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.ErrorType != pb.ErrorType_CARD_NOT_REGISTERED {
+			t.Fatal()
+		}
+	}
+}

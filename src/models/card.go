@@ -163,3 +163,13 @@ func CreateCardInTx(id string, customer *Customer, credit int, tx *gorp.Transact
 
 	return card, nil
 }
+
+func (self *Card) UpdateInTx(tx *gorp.Transaction) error {
+	_, err := tx.Update(self)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
