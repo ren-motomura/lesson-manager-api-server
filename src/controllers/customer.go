@@ -68,6 +68,14 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		return
 	}
 
+	{ // name の 重複確認
+		_, err = models.FindCustomerByCompanyAndName(r.Company, param.Name)
+		if err != errs.ErrNotFound {
+			writeErrorResponse(rw, 409, pb.ErrorType_DUPLICATE_NAME_EXIST, "")
+			return
+		}
+	}
+
 	if param.Card != nil {
 		_, err = models.FindCard(param.Card.Id, false, nil)
 		if err != errs.ErrNotFound {

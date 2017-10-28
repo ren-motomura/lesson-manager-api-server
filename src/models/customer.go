@@ -84,6 +84,23 @@ func FindCustomer(id int, forUpdate bool, tx *gorp.Transaction) (*Customer, erro
 	return customer, nil
 }
 
+func FindCustomerByCompanyAndName(company *Company, name string) (*Customer, error) {
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Customer{}, "select * from customers where company_id = ? and name = ?", company.ID, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	customer := rows[0].(*Customer)
+	return customer, nil
+}
+
 func SelectCustomersByCompany(company *Company) ([]*Customer, error) {
 	db, err := Db()
 	if err != nil {

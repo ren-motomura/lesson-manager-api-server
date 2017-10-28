@@ -95,25 +95,45 @@ func TestCreateCustomer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	frw := fakeResponseWriter{}
-	controllers.Route(&frw, pr)
+	{ // 正常系
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
 
-	if frw.status != 200 {
-		t.Fatalf("status: %d", frw.status)
-	}
-	res := &pb.CreateCustomerResponse{}
-	err = proto.Unmarshal(frw.body, res)
-	if err != nil {
-		t.Fatal(err)
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.CreateCustomerResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = models.FindCustomer(int(res.Customer.Id), false, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.Customer.Card != nil {
+			t.Fatal("card must be nil")
+		}
 	}
 
-	_, err = models.FindCustomer(int(res.Customer.Id), false, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	{ // 名前の重複エラー
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
 
-	if res.Customer.Card != nil {
-		t.Fatal("card must be nil")
+		if frw.status != 409 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.ErrorResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.ErrorType != pb.ErrorType_DUPLICATE_NAME_EXIST {
+			t.Fatal()
+		}
 	}
 }
 
