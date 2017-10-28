@@ -190,14 +190,14 @@ func TestUpdateCustomer(t *testing.T) {
 
 	company, session := testutils.CreateCompanyAndSession()
 
+	updatedName := "update name"
+	updatedDescription := "updated description"
 	{
 		customer, err := models.CreateCustomer("sample customer", "desc", company)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		updatedName := "update name"
-		updatedDescription := "updated description"
 		reqParam := &pb.UpdateCustomerRequest{
 			Customer: &pb.Customer{
 				Id:          int32(customer.ID),
@@ -228,6 +228,38 @@ func TestUpdateCustomer(t *testing.T) {
 		}
 
 		if newCustomer.Description != updatedDescription {
+			t.Fatal()
+		}
+	}
+
+	{ // 名前の重複エラー
+		customer, err := models.CreateCustomer("sample customer2", "desc", company)
+		reqParam := &pb.UpdateCustomerRequest{
+			Customer: &pb.Customer{
+				Id:          int32(customer.ID),
+				Name:        updatedName,
+				Description: updatedDescription,
+			},
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("UpdateCustomer", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 409 {
+			t.Fatalf("status: %d", frw.status)
+		}
+		res := &pb.ErrorResponse{}
+		err = proto.Unmarshal(frw.body, res)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if res.ErrorType != pb.ErrorType_DUPLICATE_NAME_EXIST {
 			t.Fatal()
 		}
 	}

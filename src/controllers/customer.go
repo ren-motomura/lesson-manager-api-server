@@ -150,6 +150,20 @@ func (updateCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		return
 	}
 
+	{ // 名前の重複確認
+		customer, err := models.FindCustomerByCompanyAndName(r.Company, param.Customer.Name)
+		if err != errs.ErrNotFound {
+			if err != nil {
+				writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+				return
+			}
+			if customer.ID != int(param.Customer.Id) {
+				writeErrorResponse(rw, 409, pb.ErrorType_DUPLICATE_NAME_EXIST, "")
+				return
+			}
+		}
+	}
+
 	customer, err := models.FindCustomer(int(param.Customer.Id), false, nil)
 	if err != nil {
 		if err == errs.ErrNotFound {
