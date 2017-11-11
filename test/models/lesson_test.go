@@ -86,6 +86,16 @@ func TestLesson(t *testing.T) {
 		}
 	}
 
+	{ // 単体取得
+		lesson, err := models.FindLesson(lessons[0].ID, false, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if lesson.StaffID != lessons[0].StaffID {
+			t.Fatal()
+		}
+	}
+
 	{ // 時間が対象外
 		selectedLessons, err := models.SelectLessonsByCompanyAndTakenAtRange(company, now.Add(time.Second), now.Add(2*time.Second))
 		if err != nil {

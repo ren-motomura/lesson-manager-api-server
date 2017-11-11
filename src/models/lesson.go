@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-gorp/gorp"
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
 )
 
 type PaymentType int8
@@ -51,6 +52,34 @@ func (self *Lesson) Delete() error {
 	}
 
 	return nil
+}
+
+func FindLesson(id int, forUpdate bool, tx *gorp.Transaction) (*Lesson, error) {
+	forUpStatement := ""
+	if forUpdate {
+		forUpStatement = "for update"
+	}
+
+	var selector Selector
+	if tx != nil {
+		selector = tx
+	} else {
+		db, err := Db()
+		if err != nil {
+			return nil, err
+		}
+		selector = db
+	}
+
+	rows, err := selector.Select(Lesson{}, "select * from lessons where id = ? and is_valid = ? "+forUpStatement, id, true)
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) != 1 {
+		return nil, errs.ErrNotFound
+	}
+	lesson := rows[0].(*Lesson)
+	return lesson, nil
 }
 
 func SelectLessonsByCompanyAndTakenAtRange(company *Company, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {

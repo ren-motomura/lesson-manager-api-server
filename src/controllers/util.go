@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/log"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/ren-motomura/lesson-manager-api-server/src/models"
 	"github.com/ren-motomura/lesson-manager-api-server/src/procesures"
 	pb "github.com/ren-motomura/lesson-manager-api-server/src/protobufs"
 )
@@ -24,4 +25,18 @@ func writeErrorResponse(rw http.ResponseWriter, responseStatus int, errorType pb
 	})
 	rw.WriteHeader(responseStatus)
 	rw.Write(res)
+}
+
+func paymentTypeToPbPaymentType(paymentType models.PaymentType) pb.PaymentType {
+	if paymentType == models.PaymentTypeCash {
+		return pb.PaymentType_ByCash
+	}
+	return pb.PaymentType_ByCard
+}
+
+func pbPaymentTYpeToPaymentType(pbPaymentType pb.PaymentType) models.PaymentType {
+	if pbPaymentType == pb.PaymentType_ByCash {
+		return models.PaymentTypeCash
+	}
+	return models.PaymentTypeCard
 }
