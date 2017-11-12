@@ -83,6 +83,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": true,
 		"delegate":             registerLesson{},
 	},
+	"SearchLessons": {
+		"requireAuthorization": true,
+		"delegate":             searchLessons{},
+	},
 }
 
 type executer interface {

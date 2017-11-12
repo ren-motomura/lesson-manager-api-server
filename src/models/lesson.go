@@ -83,6 +83,10 @@ func FindLesson(id int, forUpdate bool, tx *gorp.Transaction) (*Lesson, error) {
 }
 
 func SelectLessonsByCompanyAndTakenAtRange(company *Company, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if company == nil {
+		return []*Lesson{}, nil
+	}
+
 	db, err := Db()
 	if err != nil {
 		return nil, err
@@ -100,6 +104,10 @@ func SelectLessonsByCompanyAndTakenAtRange(company *Company, takenAtFrom time.Ti
 }
 
 func SelectLessonsByStaffAndTakenAtRange(staff *Staff, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if staff == nil {
+		return []*Lesson{}, nil
+	}
+
 	db, err := Db()
 	if err != nil {
 		return nil, err
@@ -117,6 +125,10 @@ func SelectLessonsByStaffAndTakenAtRange(staff *Staff, takenAtFrom time.Time, ta
 }
 
 func SelectLessonsByCustomerAndTakenAtRange(customer *Customer, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if customer == nil {
+		return []*Lesson{}, nil
+	}
+
 	db, err := Db()
 	if err != nil {
 		return nil, err
@@ -134,12 +146,100 @@ func SelectLessonsByCustomerAndTakenAtRange(customer *Customer, takenAtFrom time
 }
 
 func SelectLessonsByStudioAndTakenAtRange(studio *Studio, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if studio == nil {
+		return []*Lesson{}, nil
+	}
+
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and studio_id = ? and taken_at >= ? and taken_at < ?", true, studio.ID, takenAtFrom, takenAtTo)
+	if err != nil {
+		return nil, err
+	}
+	lessons := make([]*Lesson, len(rows))
+	for i, row := range rows {
+		lessons[i] = row.(*Lesson)
+	}
+	return lessons, nil
+}
+
+func SelectLessonsByStudioAndStaffAndTakenAtRange(studio *Studio, staff *Staff, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if studio == nil || staff == nil {
+		return []*Lesson{}, nil
+	}
+
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and studio_id = ? and staff_id = ? and taken_at >= ? and taken_at < ?", true, studio.ID, staff.ID, takenAtFrom, takenAtTo)
+	if err != nil {
+		return nil, err
+	}
+	lessons := make([]*Lesson, len(rows))
+	for i, row := range rows {
+		lessons[i] = row.(*Lesson)
+	}
+	return lessons, nil
+}
+
+func SelectLessonsByStudioAndCustomerAndTakenAtRange(studio *Studio, customer *Customer, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if studio == nil || customer == nil {
+		return []*Lesson{}, nil
+	}
+
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and studio_id = ? and customer_id = ? and taken_at >= ? and taken_at < ?", true, studio.ID, customer.ID, takenAtFrom, takenAtTo)
+	if err != nil {
+		return nil, err
+	}
+	lessons := make([]*Lesson, len(rows))
+	for i, row := range rows {
+		lessons[i] = row.(*Lesson)
+	}
+	return lessons, nil
+}
+
+func SelectLessonsByStaffAndCustomerAndTakenAtRange(staff *Staff, customer *Customer, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if staff == nil || customer == nil {
+		return []*Lesson{}, nil
+	}
+
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and staff_id = ? and customer_id = ? and taken_at >= ? and taken_at < ?", true, staff.ID, customer.ID, takenAtFrom, takenAtTo)
+	if err != nil {
+		return nil, err
+	}
+	lessons := make([]*Lesson, len(rows))
+	for i, row := range rows {
+		lessons[i] = row.(*Lesson)
+	}
+	return lessons, nil
+}
+
+func SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(studio *Studio, staff *Staff, customer *Customer, takenAtFrom time.Time, takenAtTo time.Time) ([]*Lesson, error) {
+	if studio == nil || staff == nil || customer == nil {
+		return []*Lesson{}, nil
+	}
+
+	db, err := Db()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Select(Lesson{}, "select * from lessons where is_valid = ? and studio_id = ? and staff_id = ? and customer_id = ? and taken_at >= ? and taken_at < ?", true, studio.ID, staff.ID, customer.ID, takenAtFrom, takenAtTo)
 	if err != nil {
 		return nil, err
 	}

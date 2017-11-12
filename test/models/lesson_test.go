@@ -116,6 +116,11 @@ func TestLesson(t *testing.T) {
 		if len(selectedLessons) != len(studios)*len(staffs)*len(customers) {
 			t.Fatalf("Invalid count: %d", len(selectedLessons))
 		}
+
+		selectedLessons, _ = models.SelectLessonsByCompanyAndTakenAtRange(nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
 	}
 
 	{ // スタジオで取得
@@ -126,6 +131,11 @@ func TestLesson(t *testing.T) {
 
 		if len(selectedLessons) != len(staffs)*len(customers) {
 			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndTakenAtRange(nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
 		}
 	}
 
@@ -138,6 +148,11 @@ func TestLesson(t *testing.T) {
 		if len(selectedLessons) != len(studios)*len(customers) {
 			t.Fatalf("Invalid count: %d", len(selectedLessons))
 		}
+
+		selectedLessons, _ = models.SelectLessonsByStaffAndTakenAtRange(nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
 	}
 
 	{ // 顧客で取得
@@ -148,6 +163,114 @@ func TestLesson(t *testing.T) {
 
 		if len(selectedLessons) != len(studios)*len(staffs) {
 			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLessons, _ = models.SelectLessonsByCustomerAndTakenAtRange(nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+	}
+
+	{ // スタジオとスタッフで取得
+		selectedLessons, err := models.SelectLessonsByStudioAndStaffAndTakenAtRange(studios[0], staffs[0], now.Add(-time.Second), now.Add(time.Second))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(selectedLessons) != len(customers) {
+			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndStaffAndTakenAtRange(nil, staffs[0], now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndStaffAndTakenAtRange(studios[0], nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+	}
+
+	{ // スタジオと顧客で取得
+		selectedLessons, err := models.SelectLessonsByStudioAndCustomerAndTakenAtRange(studios[0], customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(selectedLessons) != len(staffs) {
+			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndCustomerAndTakenAtRange(nil, customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndCustomerAndTakenAtRange(studios[0], nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+	}
+
+	{ // スタッフと顧客で取得
+		selectedLessons, err := models.SelectLessonsByStaffAndCustomerAndTakenAtRange(staffs[0], customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(selectedLessons) != len(studios) {
+			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStaffAndCustomerAndTakenAtRange(nil, customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStaffAndCustomerAndTakenAtRange(staffs[0], nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+	}
+
+	{ // スタジオとスタッフと顧客で取得
+		selectedLessons, err := models.SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(studios[0], staffs[0], customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(selectedLessons) != 1 {
+			t.Fatalf("Invalid count: %d", len(selectedLessons))
+		}
+
+		selectedLesson := selectedLessons[0]
+
+		if selectedLesson.StudioID != studios[0].ID {
+			t.Fatal()
+		}
+
+		if selectedLesson.StaffID != staffs[0].ID {
+			t.Fatal()
+		}
+
+		if selectedLesson.CustomerID != customers[0].ID {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(nil, staffs[0], customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(studios[0], nil, customers[0], now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
+		}
+
+		selectedLessons, _ = models.SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(studios[0], staffs[0], nil, now.Add(-time.Second), now.Add(time.Second))
+		if len(selectedLessons) != 0 {
+			t.Fatal()
 		}
 	}
 

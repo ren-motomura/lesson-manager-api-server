@@ -174,3 +174,92 @@ func (registerLesson) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 	rw.WriteHeader(200)
 	rw.Write(res)
 }
+
+type searchLessons struct {
+}
+
+func (searchLessons) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.SearchLessonsRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	hasStudioCondition := param.StudioId >= 0
+	hasStaffCondition := param.StaffId >= 0
+	hasCustomerCondition := param.CustomerId >= 0
+	takenAtFrom := time.Unix(param.TakenAtFrom, 0)
+	takenAtTo := time.Unix(param.TakenAtTo, 0)
+
+	var studio *models.Studio
+	if hasStudioCondition {
+		studio, err = models.FindStudio(int(param.StudioId), false, nil)
+		if err != nil && err != errs.ErrNotFound {
+			writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+			return
+		}
+	}
+
+	var staff *models.Staff
+	if hasStaffCondition {
+		staff, err = models.FindStaff(int(param.StaffId), false, nil)
+		if err != nil && err != errs.ErrNotFound {
+			writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+			return
+		}
+	}
+
+	var customer *models.Customer
+	if hasCustomerCondition {
+		customer, err = models.FindCustomer(int(param.CustomerId), false, nil)
+		if err != nil && err != errs.ErrNotFound {
+			writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+			return
+		}
+	}
+
+	var lessons []*models.Lesson
+	if hasStudioCondition && hasStaffCondition && hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStudioAndStaffAndCustomerAndTakenAtRange(studio, staff, customer, takenAtFrom, takenAtTo)
+	} else if hasStudioCondition && hasStaffCondition && !hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStudioAndStaffAndTakenAtRange(studio, staff, takenAtFrom, takenAtTo)
+	} else if hasStudioCondition && !hasStaffCondition && hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStudioAndCustomerAndTakenAtRange(studio, customer, takenAtFrom, takenAtTo)
+	} else if !hasStudioCondition && hasStaffCondition && hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStaffAndCustomerAndTakenAtRange(staff, customer, takenAtFrom, takenAtTo)
+	} else if hasStudioCondition && !hasStaffCondition && !hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStudioAndTakenAtRange(studio, takenAtFrom, takenAtTo)
+	} else if !hasStudioCondition && hasStaffCondition && !hasCustomerCondition {
+		lessons, err = models.SelectLessonsByStaffAndTakenAtRange(staff, takenAtFrom, takenAtTo)
+	} else if !hasStudioCondition && !hasStaffCondition && hasCustomerCondition {
+		lessons, err = models.SelectLessonsByCustomerAndTakenAtRange(customer, takenAtFrom, takenAtTo)
+	} else {
+		lessons, err = models.SelectLessonsByCompanyAndTakenAtRange(r.Company, takenAtFrom, takenAtTo)
+	}
+
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	var pbLessons = make([]*pb.Lesson, 0, len(lessons))
+	for _, lesson := range lessons {
+		pbLesson := &pb.Lesson{
+			Id:          int32(lesson.ID),
+			StudioId:    int32(lesson.StudioID),
+			StaffId:     int32(lesson.StaffID),
+			CustomerId:  int32(lesson.CustomerID),
+			Fee:         int32(lesson.Fee),
+			PaymentType: paymentTypeToPbPaymentType(lesson.PaymentType),
+			TakenAt:     lesson.TakenAt.Unix(),
+		}
+		pbLessons = append(pbLessons, pbLesson)
+	}
+
+	res, _ := proto.Marshal(&pb.SearchLessonsResponse{
+		Lessons: pbLessons,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}
