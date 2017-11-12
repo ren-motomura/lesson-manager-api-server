@@ -263,3 +263,80 @@ func (searchLessons) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest
 	rw.WriteHeader(200)
 	rw.Write(res)
 }
+
+type deleteLesson struct {
+}
+
+func (deleteLesson) Execute(rw http.ResponseWriter, r *procesures.ParsedRequest) {
+	param := &pb.DeleteLessonRequest{}
+	err := proto.Unmarshal(r.Data, param)
+	if err != nil {
+		writeErrorResponse(rw, 400, pb.ErrorType_INVALID_REQUEST_FORMAT, "")
+		return
+	}
+
+	lesson, err := models.FindLesson(int(param.Id), false, nil)
+	if err != nil {
+		if err == errs.ErrNotFound {
+			res, _ := proto.Marshal(&pb.DeleteStaffResponse{ // なきゃないで良い
+				Success: true,
+			})
+			rw.WriteHeader(200)
+			rw.Write(res)
+			return
+		}
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	if lesson.CompanyID != r.Company.ID {
+		writeErrorResponse(rw, 403, pb.ErrorType_FORBIDDEN, "")
+		return
+	}
+
+	db, err := models.Db()
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	lesson, err = models.FindLesson(lesson.ID, true, tx)
+	if err != nil {
+		if err == errs.ErrNotFound {
+			res, _ := proto.Marshal(&pb.DeleteStaffResponse{ // なきゃないで良い
+				Success: true,
+			})
+			rw.WriteHeader(200)
+			rw.Write(res)
+			return
+		}
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	err = lesson.DeleteInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		writeErrorResponseWithLog(err, r, rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
+		return
+	}
+
+	res, _ := proto.Marshal(&pb.DeleteStaffResponse{ // エラーは発生しないはず
+		Success: true,
+	})
+	rw.WriteHeader(200)
+	rw.Write(res)
+}

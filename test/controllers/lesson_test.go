@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/controllers"
 	"github.com/ren-motomura/lesson-manager-api-server/src/models"
@@ -635,6 +637,40 @@ func TestSearchLessons(t *testing.T) {
 		}
 
 		if len(res.Lessons) != len(studios)*len(staffs)*len(customers) {
+			t.Fatal()
+		}
+	}
+}
+
+func TestDeleteLesson(t *testing.T) {
+	teardown := testutils.Setup(t)
+	defer teardown(t)
+
+	company, session := testutils.CreateCompanyAndSession()
+	studio, _ := models.CreateStudio("studio", "", "", company, "")
+	staff, _ := models.CreateStaff("staff", "", company)
+	customer, _ := models.CreateCustomer("customer", "", company)
+	lesson, _ := models.CreateLesson(company, studio, staff, customer, 100, models.PaymentTypeCash, time.Now())
+
+	{
+		reqParam := &pb.DeleteLessonRequest{
+			Id: int32(lesson.ID),
+		}
+		reqBin, _ := proto.Marshal(reqParam)
+		req := testutils.BuildRequest("DeleteLesson", reqBin, session.ID)
+		pr, err := procesures.ParseRequest(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		frw := fakeResponseWriter{}
+		controllers.Route(&frw, pr)
+
+		if frw.status != 200 {
+			t.Fatalf("status: %d", frw.status)
+		}
+
+		_, err = models.FindLesson(lesson.ID, false, nil)
+		if err != errs.ErrNotFound {
 			t.Fatal()
 		}
 	}

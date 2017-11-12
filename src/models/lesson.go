@@ -45,8 +45,23 @@ func (self *Lesson) Delete() error {
 		return err
 	}
 
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	err = self.DeleteInTx(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+
+	return nil
+}
+
+func (self *Lesson) DeleteInTx(tx *gorp.Transaction) error {
 	self.IsValid = false
-	_, err = db.Update(self)
+	_, err := tx.Update(self)
 	if err != nil {
 		return err
 	}
