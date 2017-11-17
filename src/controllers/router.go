@@ -91,6 +91,10 @@ var funcMap = map[string]map[string]interface{}{
 		"requireAuthorization": true,
 		"delegate":             deleteLesson{},
 	},
+	"SendMail": {
+		"requireAuthorization": true,
+		"delegate":             sendMail{},
+	},
 }
 
 type executer interface {
