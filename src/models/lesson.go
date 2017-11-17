@@ -290,7 +290,7 @@ func CreateLessonInTx(company *Company, studio *Studio, staff *Staff, customer *
 		CustomerID:  customer.ID,
 		Fee:         fee,
 		PaymentType: paymentType,
-		TakenAt:     takenAt.UTC(),
+		TakenAt:     takenAt,
 		IsValid:     true,
 	}
 	err := tx.Insert(lesson)
