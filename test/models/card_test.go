@@ -22,10 +22,9 @@ func TestCard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	customer, err := models.CreateCustomer(
-		"sample customer",
-		"description",
+	customer, err := testutils.CreateCustomerSimple(
 		company,
+		"sample customer",
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -47,10 +46,9 @@ func TestCard(t *testing.T) {
 	}
 
 	{
-		customer2, err := models.CreateCustomer(
-			"sample customer2",
-			"description",
+		customer2, err := testutils.CreateCustomerSimple(
 			company,
+			"sample customer2",
 		)
 		if err != nil {
 			t.Fatal(err)

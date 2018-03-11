@@ -18,11 +18,11 @@ func TestSelectCustomers(t *testing.T) {
 
 	company, session := testutils.CreateCompanyAndSession()
 
-	customer1, err := models.CreateCustomer("customer1", "desc", company)
+	customer1, err := testutils.CreateCustomerSimple(company, "customer1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	customer2, err := models.CreateCustomer("customer2", "desc", company)
+	customer2, err := testutils.CreateCustomerSimple(company, "customer1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,8 +86,20 @@ func TestCreateCustomer(t *testing.T) {
 	_, session := testutils.CreateCompanyAndSession()
 
 	reqParam := &pb.CreateCustomerRequest{
-		Name:        "sample customer",
-		Description: "",
+		Name:         "sample customer",
+		Kana:         "",
+		Birthday:     0,
+		Gender:       0,
+		PostalCode1:  "",
+		PostalCode2:  "",
+		Address:      "",
+		PhoneNumber:  "",
+		JoinDate:     0,
+		EmailAddress: "",
+		CanMail:      false,
+		CanEmail:     false,
+		CanCall:      false,
+		Description:  "",
 	}
 	reqBin, _ := proto.Marshal(reqParam)
 	req := testutils.BuildRequest("CreateCustomer", reqBin, session.ID)
@@ -115,24 +127,6 @@ func TestCreateCustomer(t *testing.T) {
 
 		if res.Customer.Card != nil {
 			t.Fatal("card must be nil")
-		}
-	}
-
-	{ // 名前の重複エラー
-		frw := fakeResponseWriter{}
-		controllers.Route(&frw, pr)
-
-		if frw.status != 409 {
-			t.Fatalf("status: %d", frw.status)
-		}
-		res := &pb.ErrorResponse{}
-		err = proto.Unmarshal(frw.body, res)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if res.ErrorType != pb.ErrorType_DUPLICATE_NAME_EXIST {
-			t.Fatal()
 		}
 	}
 }
@@ -193,7 +187,7 @@ func TestUpdateCustomer(t *testing.T) {
 	updatedName := "update name"
 	updatedDescription := "updated description"
 	{
-		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		customer, err := testutils.CreateCustomerSimple(company, "sample customer")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -231,38 +225,6 @@ func TestUpdateCustomer(t *testing.T) {
 			t.Fatal()
 		}
 	}
-
-	{ // 名前の重複エラー
-		customer, err := models.CreateCustomer("sample customer2", "desc", company)
-		reqParam := &pb.UpdateCustomerRequest{
-			Customer: &pb.Customer{
-				Id:          int32(customer.ID),
-				Name:        updatedName,
-				Description: updatedDescription,
-			},
-		}
-		reqBin, _ := proto.Marshal(reqParam)
-		req := testutils.BuildRequest("UpdateCustomer", reqBin, session.ID)
-		pr, err := procesures.ParseRequest(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		frw := fakeResponseWriter{}
-		controllers.Route(&frw, pr)
-
-		if frw.status != 409 {
-			t.Fatalf("status: %d", frw.status)
-		}
-		res := &pb.ErrorResponse{}
-		err = proto.Unmarshal(frw.body, res)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if res.ErrorType != pb.ErrorType_DUPLICATE_NAME_EXIST {
-			t.Fatal()
-		}
-	}
 }
 
 func TestDeleteCustomer(t *testing.T) {
@@ -272,7 +234,7 @@ func TestDeleteCustomer(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 
 	{
-		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		customer, err := testutils.CreateCustomerSimple(company, "sample customer")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -300,12 +262,12 @@ func TestDeleteCustomer(t *testing.T) {
 	}
 
 	{ // other company customer
-		otherCompany, err := models.CreateCompany("sample company2", "sample2@example.com", "password")
+		otherCompany, err := models.CreateCompany("other company", "", "")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		otherCompanyCustomer, err := models.CreateCustomer("sample customer2", "desc", otherCompany)
+		otherCompanyCustomer, err := testutils.CreateCustomerSimple(otherCompany, "sample customer2")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -335,7 +297,7 @@ func TestSetCardOnCustomer(t *testing.T) {
 
 	company, session := testutils.CreateCompanyAndSession()
 
-	customer, err := models.CreateCustomer("sample customer", "desc", company)
+	customer, err := testutils.CreateCustomerSimple(company, "sample customer")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,7 +366,7 @@ func TestAddCredit(t *testing.T) {
 
 	amount := 100
 	{
-		customer, err := models.CreateCustomer("sample customer", "desc", company)
+		customer, err := testutils.CreateCustomerSimple(company, "sample customer")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -446,7 +408,7 @@ func TestAddCredit(t *testing.T) {
 	}
 
 	{
-		customer, err := models.CreateCustomer("sample customer2", "desc", company)
+		customer, err := testutils.CreateCustomerSimple(company, "customer")
 		if err != nil {
 			t.Fatal(err)
 		}

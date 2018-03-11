@@ -53,10 +53,9 @@ func TestLesson(t *testing.T) {
 
 	customers := make([]*models.Customer, 4)
 	for i := 0; i < len(customers); i++ {
-		customer, err := models.CreateCustomer(
-			"sample customer"+strconv.Itoa(i),
-			"description",
+		customer, err := testutils.CreateCustomerSimple(
 			company,
+			"sample customer"+strconv.Itoa(i),
 		)
 		if err != nil {
 			t.Fatal(err)

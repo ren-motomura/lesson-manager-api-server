@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
@@ -68,14 +69,6 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		return
 	}
 
-	{ // name の 重複確認
-		_, err = models.FindCustomerByCompanyAndName(r.Company, param.Name)
-		if err != errs.ErrNotFound {
-			writeErrorResponse(rw, 409, pb.ErrorType_DUPLICATE_NAME_EXIST, "")
-			return
-		}
-	}
-
 	if param.Card != nil {
 		_, err = models.FindCard(param.Card.Id, false, nil)
 		if err != errs.ErrNotFound {
@@ -96,7 +89,24 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		return
 	}
 
-	customer, err := models.CreateCustomerInTx(param.Name, param.Description, r.Company, tx)
+	customer, err := models.CreateCustomerInTx(
+		r.Company,
+		param.Name,
+		param.Kana,
+		time.Unix(param.Birthday, 0),
+		models.Gender(param.Gender),
+		param.PostalCode1,
+		param.PostalCode2,
+		param.Address,
+		param.PhoneNumber,
+		time.Unix(param.JoinDate, 0),
+		param.EmailAddress,
+		param.CanMail,
+		param.CanEmail,
+		param.CanCall,
+		param.Description,
+		tx,
+	)
 	if err != nil {
 		tx.Rollback()
 		writeErrorResponse(rw, 500, pb.ErrorType_INTERNAL_SERVER_ERROR, "")
@@ -129,10 +139,22 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 	}
 	res, _ := proto.Marshal(&pb.CreateCustomerResponse{ // エラーは発生しないはず
 		Customer: &pb.Customer{
-			Id:          int32(customer.ID),
-			Name:        customer.Name,
-			Description: customer.Description,
-			Card:        pbCard,
+			Id:           int32(customer.ID),
+			Name:         customer.Name,
+			Kana:         customer.Kana,
+			Birthday:     customer.Birthday.Unix(),
+			Gender:       int32(customer.Gender),
+			PostalCode1:  customer.PostalCode1,
+			PostalCode2:  customer.PostalCode2,
+			Address:      customer.Address,
+			PhoneNumber:  customer.PhoneNumber,
+			JoinDate:     customer.JoinDate.Unix(),
+			EmailAddress: customer.EmailAddress,
+			CanMail:      customer.CanMail,
+			CanEmail:     customer.CanEmail,
+			CanCall:      customer.CanCall,
+			Description:  customer.Description,
+			Card:         pbCard,
 		},
 	})
 	rw.WriteHeader(200)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-gorp/gorp"
@@ -8,22 +9,46 @@ import (
 )
 
 type Customer struct {
-	ID          int
-	Name        string
-	Description string
-	CompanyID   int
-	CreatedAt   time.Time
-	IsValid     bool
+	ID           int
+	CompanyID    int
+	Name         string
+	Kana         string
+	IsValid      bool
+	Birthday     time.Time
+	Gender       Gender
+	PostalCode1  string
+	PostalCode2  string
+	Address      string
+	PhoneNumber  string
+	JoinDate     time.Time
+	EmailAddress string
+	CanMail      bool
+	CanEmail     bool
+	CanCall      bool
+	Description  string
+	CreatedAt    time.Time
 }
 
 func registerCustomer(dbMap *gorp.DbMap) {
 	t := dbMap.AddTableWithName(Customer{}, "customers").SetKeys(true, "ID")
 	t.ColMap("ID").Rename("id")
-	t.ColMap("Name").Rename("name")
-	t.ColMap("Description").Rename("description")
 	t.ColMap("CompanyID").Rename("company_id")
-	t.ColMap("CreatedAt").Rename("created_at")
+	t.ColMap("Name").Rename("name")
+	t.ColMap("Kana").Rename("kana")
 	t.ColMap("IsValid").Rename("is_valid")
+	t.ColMap("Birthday").Rename("birthday")
+	t.ColMap("Gender").Rename("gender")
+	t.ColMap("PostalCode1").Rename("postal_code1")
+	t.ColMap("PostalCode2").Rename("postal_code2")
+	t.ColMap("Address").Rename("address")
+	t.ColMap("PhoneNumber").Rename("phone_number")
+	t.ColMap("JoinDate").Rename("join_date")
+	t.ColMap("EmailAddress").Rename("email_address")
+	t.ColMap("CanMail").Rename("can_mail")
+	t.ColMap("CanEmail").Rename("can_email")
+	t.ColMap("CanCall").Rename("can_call")
+	t.ColMap("Description").Rename("description")
+	t.ColMap("CreatedAt").Rename("created_at")
 }
 
 func (self *Customer) Delete() error {
@@ -118,14 +143,47 @@ func SelectCustomersByCompany(company *Company) ([]*Customer, error) {
 	return customers, nil
 }
 
-func CreateCustomer(name string, description string, company *Company) (*Customer, error) {
+func CreateCustomer(
+	company *Company,
+	name string,
+	kana string,
+	birthday time.Time,
+	gender Gender,
+	postal_code1 string,
+	postal_code2 string,
+	address string,
+	phone_number string,
+	join_date time.Time,
+	email_address string,
+	can_mail bool,
+	can_email bool,
+	can_call bool,
+	description string,
+) (*Customer, error) {
 	db, err := Db()
 	if err != nil {
 		return nil, err
 	}
 
 	tx, _ := db.Begin()
-	customer, err := CreateCustomerInTx(name, description, company, tx)
+	customer, err := CreateCustomerInTx(
+		company,
+		name,
+		kana,
+		birthday,
+		gender,
+		postal_code1,
+		postal_code2,
+		address,
+		phone_number,
+		join_date,
+		email_address,
+		can_mail,
+		can_email,
+		can_call,
+		description,
+		tx,
+	)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -135,13 +193,48 @@ func CreateCustomer(name string, description string, company *Company) (*Custome
 	return customer, nil
 }
 
-func CreateCustomerInTx(name string, description string, company *Company, tx *gorp.Transaction) (*Customer, error) {
+func CreateCustomerInTx(
+	company *Company,
+	name string,
+	kana string,
+	birthday time.Time,
+	gender Gender,
+	postal_code1 string,
+	postal_code2 string,
+	address string,
+	phone_number string,
+	join_date time.Time,
+	email_address string,
+	can_mail bool,
+	can_email bool,
+	can_call bool,
+	description string,
+	tx *gorp.Transaction,
+) (*Customer, error) {
+	if len(postal_code1) > 3 {
+		return nil, fmt.Errorf("invalid length of postal_code1")
+	}
+	if len(postal_code2) > 4 {
+		return nil, fmt.Errorf("invalid length of postal_code2")
+	}
 	customer := &Customer{
-		Name:        name,
-		Description: description,
-		CompanyID:   company.ID,
-		CreatedAt:   time.Now(),
-		IsValid:     true,
+		CompanyID:    company.ID,
+		Name:         name,
+		Kana:         kana,
+		Birthday:     birthday,
+		Gender:       gender,
+		PostalCode1:  postal_code1,
+		PostalCode2:  postal_code2,
+		Address:      address,
+		PhoneNumber:  phone_number,
+		JoinDate:     join_date,
+		EmailAddress: email_address,
+		CanMail:      can_mail,
+		CanEmail:     can_email,
+		CanCall:      can_call,
+		Description:  description,
+		CreatedAt:    time.Now(),
+		IsValid:      true,
 	}
 	err := tx.Insert(customer)
 	if err != nil {

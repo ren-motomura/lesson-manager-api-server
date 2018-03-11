@@ -34,3 +34,23 @@ func CreateCompanyAndSession() (*models.Company, *models.Session) {
 	session, _ := models.CreateSession(company)
 	return company, session
 }
+
+func CreateCustomerSimple(company *models.Company, name string) (*models.Customer, error) {
+	return models.CreateCustomer(
+		company,
+		name,
+		"kana",
+		models.TimeNull,
+		models.GenderUndefined,
+		"000",  // postal_code1
+		"0000", // postal_code2
+		"address",
+		"phone_number",
+		models.TimeNull,
+		"email_address",
+		false,
+		false,
+		false,
+		"description",
+	)
+}

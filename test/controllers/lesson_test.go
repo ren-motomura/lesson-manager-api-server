@@ -22,12 +22,12 @@ func TestRegisterLesson(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 	studio, _ := models.CreateStudio("studio1", "", "", company, "")
 	staff, _ := models.CreateStaff("staff1", "", company)
-	customer, _ := models.CreateCustomer("customer1", "desc", company)
+	customer, _ := testutils.CreateCustomerSimple(company, "customer1")
 
 	otherCompany, _ := models.CreateCompany("other company", "", "")
 	otherCompanyStudio, _ := models.CreateStudio("studio2", "", "", otherCompany, "")
 	otherCompanyStaff, _ := models.CreateStaff("staff2", "", otherCompany)
-	otherCompanyCustomer, _ := models.CreateCustomer("customer2", "desc", otherCompany)
+	otherCompanyCustomer, _ := testutils.CreateCustomerSimple(company, "customer2")
 
 	{ // 正常系
 		reqParam := &pb.RegisterLessonRequest{
@@ -284,11 +284,7 @@ func TestSearchLessons(t *testing.T) {
 
 	customers := make([]*models.Customer, 4)
 	for i := 0; i < len(customers); i++ {
-		customer, err := models.CreateCustomer(
-			"sample customer"+strconv.Itoa(i),
-			"description",
-			company,
-		)
+		customer, err := testutils.CreateCustomerSimple(company, "sample customer"+strconv.Itoa(i))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -649,7 +645,7 @@ func TestDeleteLesson(t *testing.T) {
 	company, session := testutils.CreateCompanyAndSession()
 	studio, _ := models.CreateStudio("studio", "", "", company, "")
 	staff, _ := models.CreateStaff("staff", "", company)
-	customer, _ := models.CreateCustomer("customer", "", company)
+	customer, _ := testutils.CreateCustomerSimple(company, "customer1")
 	lesson, _ := models.CreateLesson(company, studio, staff, customer, 100, models.PaymentTypeCash, time.Now())
 
 	{
