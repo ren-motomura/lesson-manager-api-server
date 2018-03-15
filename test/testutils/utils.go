@@ -40,13 +40,13 @@ func CreateCustomerSimple(company *models.Company, name string) (*models.Custome
 		company,
 		name,
 		"kana",
-		models.TimeNull,
+		0,
 		models.GenderUndefined,
 		"000",  // postal_code1
 		"0000", // postal_code2
 		"address",
 		"phone_number",
-		models.TimeNull,
+		0,
 		"email_address",
 		false,
 		false,

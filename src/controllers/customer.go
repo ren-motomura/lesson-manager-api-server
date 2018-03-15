@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/ren-motomura/lesson-manager-api-server/src/errs"
@@ -93,13 +92,13 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 		r.Company,
 		param.Name,
 		param.Kana,
-		time.Unix(param.Birthday, 0),
+		param.Birthday,
 		models.Gender(param.Gender),
 		param.PostalCode1,
 		param.PostalCode2,
 		param.Address,
 		param.PhoneNumber,
-		time.Unix(param.JoinDate, 0),
+		param.JoinDate,
 		param.EmailAddress,
 		param.CanMail,
 		param.CanEmail,
@@ -142,13 +141,13 @@ func (createCustomer) Execute(rw http.ResponseWriter, r *procesures.ParsedReques
 			Id:           int32(customer.ID),
 			Name:         customer.Name,
 			Kana:         customer.Kana,
-			Birthday:     customer.Birthday.Unix(),
+			Birthday:     customer.Birthday,
 			Gender:       int32(customer.Gender),
 			PostalCode1:  customer.PostalCode1,
 			PostalCode2:  customer.PostalCode2,
 			Address:      customer.Address,
 			PhoneNumber:  customer.PhoneNumber,
-			JoinDate:     customer.JoinDate.Unix(),
+			JoinDate:     customer.JoinDate,
 			EmailAddress: customer.EmailAddress,
 			CanMail:      customer.CanMail,
 			CanEmail:     customer.CanEmail,

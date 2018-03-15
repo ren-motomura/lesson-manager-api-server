@@ -14,19 +14,19 @@ type Customer struct {
 	Name         string
 	Kana         string
 	IsValid      bool
-	Birthday     time.Time
+	Birthday     int64
 	Gender       Gender
 	PostalCode1  string
 	PostalCode2  string
 	Address      string
 	PhoneNumber  string
-	JoinDate     time.Time
+	JoinDate     int64
 	EmailAddress string
 	CanMail      bool
 	CanEmail     bool
 	CanCall      bool
 	Description  string
-	CreatedAt    time.Time
+	CreatedAt    int64
 }
 
 func registerCustomer(dbMap *gorp.DbMap) {
@@ -147,13 +147,13 @@ func CreateCustomer(
 	company *Company,
 	name string,
 	kana string,
-	birthday time.Time,
+	birthday int64,
 	gender Gender,
 	postal_code1 string,
 	postal_code2 string,
 	address string,
 	phone_number string,
-	join_date time.Time,
+	join_date int64,
 	email_address string,
 	can_mail bool,
 	can_email bool,
@@ -197,13 +197,13 @@ func CreateCustomerInTx(
 	company *Company,
 	name string,
 	kana string,
-	birthday time.Time,
+	birthday int64,
 	gender Gender,
 	postal_code1 string,
 	postal_code2 string,
 	address string,
 	phone_number string,
-	join_date time.Time,
+	join_date int64,
 	email_address string,
 	can_mail bool,
 	can_email bool,
@@ -233,7 +233,7 @@ func CreateCustomerInTx(
 		CanEmail:     can_email,
 		CanCall:      can_call,
 		Description:  description,
-		CreatedAt:    time.Now(),
+		CreatedAt:    time.Now().Unix(),
 		IsValid:      true,
 	}
 	err := tx.Insert(customer)
